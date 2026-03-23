@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const ACTIVITY_FEEDBACK: Record<string, string> = {
   "Inner Work":
     "You met yourself gently and told the truth about what you feel.",
-  Thinking:
-    "You gave shape to your idea and made your thinking easier to follow.",
+  Thinking: "You organized your thought clearly and supported it with reason.",
   "Free Talk":
     "You let your voice move freely, and that openness created breathing room.",
   Mentor:
@@ -68,7 +67,7 @@ function getAnswerAwareFeedback(answer: string): string[] {
   return lines.slice(0, 2);
 }
 
-export default function FeedbackPage() {
+function FeedbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activity = searchParams.get("activity") ?? "Inner Work";
@@ -77,6 +76,7 @@ export default function FeedbackPage() {
   const growthCount = Number.isFinite(growthSignal)
     ? Math.max(0, growthSignal)
     : 0;
+
   const feedbackMessage =
     ACTIVITY_FEEDBACK[activity] ??
     "You showed up with intention today. Keep this momentum going.";
@@ -100,6 +100,7 @@ export default function FeedbackPage() {
           : activity === "Free Talk"
             ? "free-talk"
             : "mentor";
+
     router.push(
       `/learner?growth=${nextGrowth}&last=${last}&well=${encodeURIComponent(reflectionSummary)}`,
     );
@@ -136,5 +137,13 @@ export default function FeedbackPage() {
         </button>
       </section>
     </main>
+  );
+}
+
+export default function FeedbackPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen px-4 py-10" />}>
+      <FeedbackContent />
+    </Suspense>
   );
 }

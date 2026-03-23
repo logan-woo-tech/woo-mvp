@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockConversation } from "../../mocks/conversation";
 
@@ -12,7 +12,7 @@ const ACTIVITY_QUESTIONS: Record<string, string[]> = {
   ],
   Thinking: [
     "What is one idea you want to examine today?",
-    "What is one idea you want to examine, and why do you think that?",
+    "What is one idea you want to examine, and what evidence supports it?",
     "What assumption might be shaping your thinking, and how would you test it with a real example?",
   ],
   "Free Talk": [
@@ -66,7 +66,7 @@ const ACTIVITY_ACCENT: Record<string, string> = {
   Mentor: "text-amber-200",
 };
 
-export default function ConversationPage() {
+function ConversationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activity = searchParams.get("activity") ?? "Inner Work";
@@ -136,5 +136,13 @@ export default function ConversationPage() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function ConversationPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen px-4 py-10" />}>
+      <ConversationContent />
+    </Suspense>
   );
 }
