@@ -86,11 +86,82 @@ function getPracticalNextLine(answer: string): string {
   return 'Try this next time: Replace "very good" with "effective" or "clear".';
 }
 
+function getWhatWorks(answer: string): string {
+  const trimmed = answer.trim();
+  const normalized = trimmed.toLowerCase();
+
+  if (normalized.includes("because")) {
+    return "You explained your reason clearly.";
+  }
+
+  if (normalized.includes("for example") || normalized.includes("example")) {
+    return "You made your point concrete with an example.";
+  }
+
+  if (trimmed.length >= 120) {
+    return "You stayed with your message and gave useful detail.";
+  }
+
+  return "You communicated directly and kept a calm tone.";
+}
+
+function getWhatToChange(answer: string): string {
+  const trimmed = answer.trim();
+  const normalized = trimmed.toLowerCase();
+
+  if (!normalized.includes("because")) {
+    return 'Add one clear reason with "because".';
+  }
+
+  if (!normalized.includes("for example") && !normalized.includes("example")) {
+    return "Add one short example to increase credibility.";
+  }
+
+  if (trimmed.length > 0 && trimmed.length < 100) {
+    return "Stay with your answer longer and add one more sentence.";
+  }
+
+  return "Tighten one phrase so your key point lands faster.";
+}
+
+function getBetterVersion(scenario: string, tone: string): string {
+  const prefix =
+    tone === "urgent"
+      ? "Urgent update:"
+      : tone === "neutral"
+        ? "Update:"
+        : "Hi, quick update:";
+
+  if (scenario === "Explain a delay to a client") {
+    return `${prefix} we are delayed by one day because of a final QA issue. For example, one bug blocked release. The new delivery time is tomorrow 4 PM.`;
+  }
+
+  if (scenario === "Handle an unhappy customer") {
+    return `${prefix} I understand your frustration because this impacted your timeline. For example, your order arrived incomplete. I will resolve this today and confirm once done.`;
+  }
+
+  if (scenario === "Ask for more time professionally") {
+    return `${prefix} I need one extra day because I want to deliver this accurately. For example, I am still validating the final numbers. I can send the complete version by tomorrow noon.`;
+  }
+
+  if (scenario === "Give a difficult update to your manager") {
+    return `${prefix} we are behind plan because a dependency changed. For example, task B took longer than expected. My recovery step is to ship phase one by Friday.`;
+  }
+
+  if (scenario === "Say no without sounding rude") {
+    return `${prefix} I cannot take this request today because I am committed to a critical deadline. For example, I am finalizing the client launch tasks. I can support tomorrow afternoon.`;
+  }
+
+  return `${prefix} I am sharing a clear update because alignment matters. For example, this keeps expectations realistic.`;
+}
+
 function FeedbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activity = searchParams.get("activity") ?? "Inner Work";
   const answer = searchParams.get("answer") ?? "";
+  const scenario = searchParams.get("scenario") ?? "Explain a delay to a client";
+  const tone = searchParams.get("tone") ?? "polite";
   const growthSignal = Number(searchParams.get("growth") ?? "0");
   const growthCount = Number.isFinite(growthSignal)
     ? Math.max(0, growthSignal)
@@ -108,6 +179,9 @@ function FeedbackContent() {
   const nextStepIcon = ACTIVITY_ICON[nextStep] ?? "✨";
   const answerAwareLines = getAnswerAwareFeedback(answer);
   const practicalNextLine = getPracticalNextLine(answer);
+  const whatWorks = getWhatWorks(answer);
+  const whatToChange = getWhatToChange(answer);
+  const betterVersion = getBetterVersion(scenario, tone);
   const reflectionSummary = answerAwareLines[0] ?? feedbackMessage;
 
   function handleContinue() {
@@ -145,6 +219,26 @@ function FeedbackContent() {
           </div>
         ) : null}
         <p className="text-sm text-neutral-300">{practicalNextLine}</p>
+        <div className="flex flex-col gap-1 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <p className="text-sm text-neutral-300">
+            <span className="text-neutral-100">What works:</span> {whatWorks}
+          </p>
+          <p className="text-sm text-neutral-300">
+            <span className="text-neutral-100">What to change:</span> {whatToChange}
+          </p>
+          <p className="text-sm text-neutral-300">
+            <span className="text-neutral-100">Better version:</span> {betterVersion}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              void navigator.clipboard.writeText(betterVersion);
+            }}
+            className="mt-2 w-fit rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+          >
+            Copy better version
+          </button>
+        </div>
         <p className="text-sm text-neutral-300">{supportMessage}</p>
         <p className="text-sm font-medium text-yellow-200">
           Next step: {nextStepIcon} {nextStep}

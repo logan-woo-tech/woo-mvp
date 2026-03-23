@@ -1,8 +1,9 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockConversation } from "../../mocks/conversation";
+import { WORK_SCENARIOS } from "../../mocks/workScenarios";
 
 const ACTIVITY_QUESTIONS: Record<string, string[]> = {
   "Inner Work": [
@@ -12,7 +13,7 @@ const ACTIVITY_QUESTIONS: Record<string, string[]> = {
   ],
   Thinking: [
     "What is one idea you want to examine today?",
-    "What is one idea you want to examine, and what evidence supports it?",
+    "What is one idea you want to examine, and why do you think that?",
     "What assumption might be shaping your thinking, and how would you test it with a real example?",
   ],
   "Free Talk": [
@@ -68,7 +69,7 @@ const ACTIVITY_ACCENT: Record<string, string> = {
 
 const ACTIVITY_HELPFUL_WORDS: Record<string, string[]> = {
   "Inner Work": ["feeling", "need", "tension", "calm", "honest"],
-  Thinking: ["idea", "reason", "example", "problem", "result"],
+  Thinking: ["idea", "reason", "because", "for example", "result"],
   "Free Talk": ["today", "stuck", "energy", "truth", "release"],
   Mentor: ["goal", "obstacle", "step", "deadline", "commitment"],
 };
@@ -84,96 +85,133 @@ const ACTIVITY_SAMPLE_ANSWER: Record<string, string> = {
     "My goal is to complete one meaningful task today because progress builds confidence. For example, I will draft section one before lunch and review it at 4 pm.",
 };
 
-const ACTIVITY_STARTERS: Record<string, string[]> = {
-  "Inner Work": [
-    "Right now I feel...",
-    "I notice this feeling because...",
-    "For example, this showed up when...",
-  ],
-  Thinking: [
-    "My main idea is...",
-    "I believe this because...",
-    "For example, one case is...",
-  ],
-  "Free Talk": [
-    "What is alive for me today is...",
-    "I keep coming back to this because...",
-    "For example, earlier today I...",
-  ],
-  Mentor: [
-    "My next goal is...",
-    "This matters because...",
-    "For example, my first step is...",
-  ],
-};
+function getDifficultyLabel(growthCount: number) {
+  if (growthCount >= 4) return "Deep";
+  if (growthCount >= 2) return "Standard";
+  return "Simple";
+}
+
+function buildLiveHints(answer: string): string[] {
+  const trimmed = answer.trim();
+  const normalized = trimmed.toLowerCase();
+  const hints: string[] = [];
+
+  if (trimmed.length > 0 && trimmed.length < 30) {
+    hints.push("Add one more detail.");
+  }
+
+  if (!normalized.includes("because")) {
+    hints.push('Add "because..." to explain your reason.');
+  }
+
+  if (
+    normalized.includes("because") &&
+    !normalized.includes("for example") &&
+    !normalized.includes("example")
+  ) {
+    hints.push("Good — now add one example.");
+  }
+
+  return hints.slice(0, 2);
+}
 
 function ConversationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   const activity = searchParams.get("activity") ?? "Inner Work";
+  const scenarioId = searchParams.get("scenario") ?? "";
   const growthSignal = Number(searchParams.get("growth") ?? "0");
   const growthCount = Number.isFinite(growthSignal)
     ? Math.max(0, growthSignal)
     : 0;
   const last = searchParams.get("last") ?? "";
 
+  const scenario = scenarioId
+    ? WORK_SCENARIOS[scenarioId as keyof typeof WORK_SCENARIOS]
+    : undefined;
+
   const fallbackQuestion =
     mockConversation.find((message) => message.role === "coach")?.text ??
     "How are you feeling right now?";
+
   const questionLevel = growthCount >= 4 ? 2 : growthCount >= 2 ? 1 : 0;
-  const questionSet = ACTIVITY_QUESTIONS[activity];
-  const question =
-    questionSet?.[questionLevel] ?? questionSet?.[0] ?? fallbackQuestion;
-  const framing =
-    ACTIVITY_FRAMING[activity] ??
-    "Coach focus: speak with honesty and intention.";
-  const supportText =
-    ACTIVITY_SUPPORT_TEXT[activity] ??
-    "Take a breath, then share: what happened, why it mattered, and one real example.";
-  const placeholder =
-    ACTIVITY_PLACEHOLDER[activity] ?? "Write your answer here...";
-  const activityIcon = ACTIVITY_ICON[activity] ?? "✨";
-  const activityAccent = ACTIVITY_ACCENT[activity] ?? "text-neutral-300";
-  const helpfulWords = ACTIVITY_HELPFUL_WORDS[activity] ?? [
-    "clear",
-    "why",
-    "example",
-    "next step",
-  ];
-  const sampleAnswer =
-    ACTIVITY_SAMPLE_ANSWER[activity] ??
-    "I want to improve this area because it matters to me. For example, I can take one small step today.";
-  const starterSentences = ACTIVITY_STARTERS[activity] ?? [
-    "I want to share...",
-    "This matters because...",
-    "For example...",
-  ];
+
+  const activityQuestionSet = ACTIVITY_QUESTIONS[activity];
+  const activityQuestion =
+    activityQuestionSet?.[questionLevel] ??
+    activityQuestionSet?.[0] ??
+    fallbackQuestion;
+
+  const framing = scenario
+    ? `Coach focus: ${scenario.focus}`
+    : (ACTIVITY_FRAMING[activity] ??
+      "Coach focus: speak with honesty and intention.");
+
+  const supportText = scenario
+    ? scenario.context
+    : (ACTIVITY_SUPPORT_TEXT[activity] ??
+      "Take a breath, then share: what happened, why it mattered, and one real example.");
+
+  const placeholder = scenario
+    ? "Write your response in a professional way..."
+    : (ACTIVITY_PLACEHOLDER[activity] ?? "Write your answer here...");
+
+  const activityIcon = scenario ? "🧭" : (ACTIVITY_ICON[activity] ?? "✨");
+  const activityAccent = scenario
+    ? "text-amber-200"
+    : (ACTIVITY_ACCENT[activity] ?? "text-neutral-300");
+
+  const helpfulWords = scenario
+    ? scenario.helpfulWords
+    : (ACTIVITY_HELPFUL_WORDS[activity] ?? [
+        "clear",
+        "because",
+        "for example",
+        "next step",
+      ]);
+
+  const starterSentences = scenario
+    ? [
+        scenario.toneStarters.polite,
+        scenario.toneStarters.neutral,
+        scenario.toneStarters.urgent,
+      ]
+    : ["My idea is...", "I think this because...", "For example..."];
+
+  const sampleAnswer = scenario
+    ? scenario.sampleAnswer
+    : (ACTIVITY_SAMPLE_ANSWER[activity] ??
+      "I want to improve this area because it matters to me. For example, I can take one small step today.");
+
+  const mainQuestion = scenario ? scenario.question : activityQuestion;
+
+  const [answer, setAnswer] = useState("");
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
-  const [answerText, setAnswerText] = useState("");
-  const normalizedAnswer = answerText.toLowerCase();
-  const liveHints: string[] = [];
 
-  if (answerText.trim().length > 0 && !normalizedAnswer.includes("because")) {
-    liveHints.push("Try adding 'because...'");
-  }
+  const difficultyLabel = getDifficultyLabel(growthCount);
+  const liveHints = useMemo(() => buildLiveHints(answer), [answer]);
 
-  if (
-    answerText.trim().length > 0 &&
-    !normalizedAnswer.includes("for example") &&
-    !normalizedAnswer.includes("example")
-  ) {
-    liveHints.push("Add one example");
-  }
-
-  if (answerText.trim().length > 0 && answerText.trim().length < 80) {
-    liveHints.push("Keep going");
+  function insertText(text: string) {
+    setAnswer(text);
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      const length = text.length;
+      textareaRef.current?.setSelectionRange(length, length);
+    });
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const answer = answerText.trim().slice(0, 800);
+    const safeAnswer = answer.trim().slice(0, 800);
+
+    const base = scenario
+      ? `/feedback?scenario=${encodeURIComponent(scenario.id)}`
+      : `/feedback?activity=${encodeURIComponent(activity)}`;
+
     router.push(
-      `/feedback?activity=${encodeURIComponent(activity)}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(answer)}`,
+      `${base}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(safeAnswer)}`,
     );
   }
 
@@ -184,13 +222,35 @@ function ConversationContent() {
         className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-6"
       >
         <p className={`text-xs ${activityAccent}`}>
-          Current activity: {activityIcon} {activity}
+          {scenario
+            ? `Scenario: ${activityIcon} ${scenario.title}`
+            : `Current activity: ${activityIcon} ${activity}`}
         </p>
-        <p className="text-xs text-neutral-300">{framing}</p>
 
-        <h1 className="text-lg text-neutral-100">{question}</h1>
+        <p className="text-xs text-neutral-300">{framing}</p>
+        <p className="text-xs text-neutral-400">
+          Difficulty: {difficultyLabel}
+        </p>
+
+        <h1 className="text-lg text-neutral-100">{mainQuestion}</h1>
 
         <p className="text-sm text-neutral-300">{supportText}</p>
+
+        <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <p className="text-xs text-neutral-400">You can start like this</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {starterSentences.map((starter) => (
+              <button
+                key={starter}
+                type="button"
+                onClick={() => insertText(starter)}
+                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+              >
+                {starter}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
           <p className="text-xs text-neutral-400">Helpful words</p>
@@ -214,40 +274,28 @@ function ConversationContent() {
         ) : null}
 
         <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-          <p className="text-xs text-neutral-400">Starter sentences</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {starterSentences.map((starter) => (
-              <button
-                key={starter}
-                type="button"
-                onClick={() => setAnswerText(starter)}
-                className="rounded-md border border-neutral-700 bg-neutral-900/50 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
-              >
-                {starter}
-              </button>
+          <p className="text-xs text-neutral-400">
+            Take your time. You can start with one word.
+          </p>
+          <div className="mt-2 flex flex-col gap-1">
+            {liveHints.map((hint) => (
+              <p key={hint} className="text-sm text-yellow-200">
+                {hint}
+              </p>
             ))}
+            {answer.trim().length >= 80 ? (
+              <p className="text-sm text-emerald-200">Good — keep going.</p>
+            ) : null}
           </div>
         </div>
-
-        {liveHints.length > 0 ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-            <p className="text-xs text-neutral-400">Live coach hints</p>
-            <div className="mt-1 flex flex-col gap-1">
-              {liveHints.map((hint) => (
-                <p key={hint} className="text-sm text-neutral-300">
-                  {hint}
-                </p>
-              ))}
-            </div>
-          </div>
-        ) : null}
 
         <p className="text-xs text-neutral-400">Your answer</p>
 
         <textarea
+          ref={textareaRef}
           name="answer"
-          value={answerText}
-          onChange={(event) => setAnswerText(event.target.value)}
+          value={answer}
+          onChange={(event) => setAnswer(event.target.value)}
           rows={6}
           placeholder={placeholder}
           className="w-full rounded-xl border border-neutral-700 bg-neutral-950/70 px-4 py-3 text-sm text-neutral-100 outline-none placeholder:text-neutral-500 focus:border-neutral-500"

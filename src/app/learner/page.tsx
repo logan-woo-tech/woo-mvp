@@ -162,6 +162,7 @@ export default async function LearnerPage({ searchParams }: LearnerPageProps) {
     ? ACTIVITY_ICON[lastActivityLabel]
     : "✨";
   const currentFocus = ACTIVITY_FOCUS[recommendedActivity];
+
   const treeEmoji =
     growthCount >= 4
       ? "🌳✨"
@@ -247,6 +248,25 @@ export default async function LearnerPage({ searchParams }: LearnerPageProps) {
             Recommended next step: {ACTIVITY_ICON[recommendedActivity]}{" "}
             {recommendedActivity}
           </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <p className="text-xs text-neutral-400">Work scenarios</p>
+
+          <Link
+            href={`/conversation?scenario=delay-client&growth=${growthCount}`}
+            className="rounded-xl border border-amber-700/50 bg-amber-950/20 px-5 py-4 text-left text-sm text-amber-100 hover:bg-amber-900/30"
+          >
+            <span className="block font-medium">
+              🧭 Explain a delay to a client
+            </span>
+            <span className="mt-1 block text-xs text-amber-200/80">
+              Communicate delays clearly without losing trust.
+            </span>
+            <span className="mt-1 block text-xs text-amber-200/80">
+              Use this before sending a real message.
+            </span>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
