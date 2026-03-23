@@ -84,6 +84,29 @@ const ACTIVITY_SAMPLE_ANSWER: Record<string, string> = {
     "My goal is to complete one meaningful task today because progress builds confidence. For example, I will draft section one before lunch and review it at 4 pm.",
 };
 
+const ACTIVITY_STARTERS: Record<string, string[]> = {
+  "Inner Work": [
+    "Right now I feel...",
+    "I notice this feeling because...",
+    "For example, this showed up when...",
+  ],
+  Thinking: [
+    "My main idea is...",
+    "I believe this because...",
+    "For example, one case is...",
+  ],
+  "Free Talk": [
+    "What is alive for me today is...",
+    "I keep coming back to this because...",
+    "For example, earlier today I...",
+  ],
+  Mentor: [
+    "My next goal is...",
+    "This matters because...",
+    "For example, my first step is...",
+  ],
+};
+
 function ConversationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -120,13 +143,35 @@ function ConversationContent() {
   const sampleAnswer =
     ACTIVITY_SAMPLE_ANSWER[activity] ??
     "I want to improve this area because it matters to me. For example, I can take one small step today.";
+  const starterSentences = ACTIVITY_STARTERS[activity] ?? [
+    "I want to share...",
+    "This matters because...",
+    "For example...",
+  ];
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
+  const [answerText, setAnswerText] = useState("");
+  const normalizedAnswer = answerText.toLowerCase();
+  const liveHints: string[] = [];
+
+  if (answerText.trim().length > 0 && !normalizedAnswer.includes("because")) {
+    liveHints.push("Try adding 'because...'");
+  }
+
+  if (
+    answerText.trim().length > 0 &&
+    !normalizedAnswer.includes("for example") &&
+    !normalizedAnswer.includes("example")
+  ) {
+    liveHints.push("Add one example");
+  }
+
+  if (answerText.trim().length > 0 && answerText.trim().length < 80) {
+    liveHints.push("Keep going");
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const rawAnswer = String(formData.get("answer") ?? "");
-    const answer = rawAnswer.trim().slice(0, 800);
+    const answer = answerText.trim().slice(0, 800);
     router.push(
       `/feedback?activity=${encodeURIComponent(activity)}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(answer)}`,
     );
@@ -168,10 +213,41 @@ function ConversationContent() {
           </p>
         ) : null}
 
+        <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <p className="text-xs text-neutral-400">Starter sentences</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {starterSentences.map((starter) => (
+              <button
+                key={starter}
+                type="button"
+                onClick={() => setAnswerText(starter)}
+                className="rounded-md border border-neutral-700 bg-neutral-900/50 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+              >
+                {starter}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {liveHints.length > 0 ? (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <p className="text-xs text-neutral-400">Live coach hints</p>
+            <div className="mt-1 flex flex-col gap-1">
+              {liveHints.map((hint) => (
+                <p key={hint} className="text-sm text-neutral-300">
+                  {hint}
+                </p>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <p className="text-xs text-neutral-400">Your answer</p>
 
         <textarea
           name="answer"
+          value={answerText}
+          onChange={(event) => setAnswerText(event.target.value)}
           rows={6}
           placeholder={placeholder}
           className="w-full rounded-xl border border-neutral-700 bg-neutral-950/70 px-4 py-3 text-sm text-neutral-100 outline-none placeholder:text-neutral-500 focus:border-neutral-500"
