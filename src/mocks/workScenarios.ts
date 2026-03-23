@@ -1,3 +1,4 @@
+export type WorkScenarioTone = "formal" | "neutral" | "friendly";
 export type WorkScenarioId = "delay-client";
 
 export type WorkScenario = {
@@ -8,11 +9,7 @@ export type WorkScenario = {
   focus: string;
   context: string;
   question: string;
-  toneStarters: {
-    polite: string;
-    neutral: string;
-    urgent: string;
-  };
+  toneStarters: Record<WorkScenarioTone, string>;
   helpfulWords: string[];
   starterSentences: string[];
   sampleAnswer: string;
@@ -29,9 +26,9 @@ export const WORK_SCENARIOS: Record<WorkScenarioId, WorkScenario> = {
       "You promised a deadline, but your team is behind. You need to inform the client without losing trust.",
     question: "How would you explain the delay and keep the client's trust?",
     toneStarters: {
-      polite: "I’d like to update you on the timeline...",
+      formal: "I’d like to update you on the timeline...",
       neutral: "We are slightly behind schedule because...",
-      urgent: "To ensure quality, we need to adjust the timeline...",
+      friendly: "Quick update — we’re a bit behind because...",
     },
     helpfulWords: [
       "delay",
@@ -51,3 +48,10 @@ export const WORK_SCENARIOS: Record<WorkScenarioId, WorkScenario> = {
       "We are slightly behind schedule because we found an issue during testing. For example, one key function did not perform as expected. To ensure quality, we suggest extending the timeline by two days and will keep you updated daily.",
   },
 };
+
+export function getWorkScenario(
+  scenarioId: string | null | undefined,
+): WorkScenario | null {
+  if (!scenarioId) return null;
+  return WORK_SCENARIOS[scenarioId as WorkScenarioId] ?? null;
+}

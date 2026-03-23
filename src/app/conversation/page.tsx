@@ -3,7 +3,10 @@
 import React, { Suspense, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockConversation } from "../../mocks/conversation";
-import { WORK_SCENARIOS } from "../../mocks/workScenarios";
+import {
+  getWorkScenario,
+  type WorkScenarioTone,
+} from "../../mocks/workScenarios";
 
 const ACTIVITY_QUESTIONS: Record<string, string[]> = {
   "Inner Work": [
@@ -115,29 +118,39 @@ function buildLiveHints(answer: string): string[] {
   return hints.slice(0, 2);
 }
 
+function speakText(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.95;
+  window.speechSynthesis.speak(utterance);
+}
+
 function ConversationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const activity = searchParams.get("activity") ?? "Inner Work";
-  const scenarioId = searchParams.get("scenario") ?? "";
+  const scenarioId = searchParams.get("scenario");
+  const scenario = getWorkScenario(scenarioId);
+
   const growthSignal = Number(searchParams.get("growth") ?? "0");
   const growthCount = Number.isFinite(growthSignal)
     ? Math.max(0, growthSignal)
     : 0;
   const last = searchParams.get("last") ?? "";
 
-  const scenario = scenarioId
-    ? WORK_SCENARIOS[scenarioId as keyof typeof WORK_SCENARIOS]
-    : undefined;
+  const [selectedTone, setSelectedTone] = useState<WorkScenarioTone>("formal");
+  const [answer, setAnswer] = useState("");
+  const [showSampleAnswer, setShowSampleAnswer] = useState(false);
 
   const fallbackQuestion =
     mockConversation.find((message) => message.role === "coach")?.text ??
     "How are you feeling right now?";
 
   const questionLevel = growthCount >= 4 ? 2 : growthCount >= 2 ? 1 : 0;
-
   const activityQuestionSet = ACTIVITY_QUESTIONS[activity];
   const activityQuestion =
     activityQuestionSet?.[questionLevel] ??
@@ -173,11 +186,7 @@ function ConversationContent() {
       ]);
 
   const starterSentences = scenario
-    ? [
-        scenario.toneStarters.polite,
-        scenario.toneStarters.neutral,
-        scenario.toneStarters.urgent,
-      ]
+    ? scenario.starterSentences
     : ["My idea is...", "I think this because...", "For example..."];
 
   const sampleAnswer = scenario
@@ -186,10 +195,6 @@ function ConversationContent() {
       "I want to improve this area because it matters to me. For example, I can take one small step today.");
 
   const mainQuestion = scenario ? scenario.question : activityQuestion;
-
-  const [answer, setAnswer] = useState("");
-  const [showSampleAnswer, setShowSampleAnswer] = useState(false);
-
   const difficultyLabel = getDifficultyLabel(growthCount);
   const liveHints = useMemo(() => buildLiveHints(answer), [answer]);
 
@@ -210,8 +215,12 @@ function ConversationContent() {
       ? `/feedback?scenario=${encodeURIComponent(scenario.id)}`
       : `/feedback?activity=${encodeURIComponent(activity)}`;
 
+    const toneParam = scenario
+      ? `&tone=${encodeURIComponent(selectedTone)}`
+      : "";
+
     router.push(
-      `${base}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(safeAnswer)}`,
+      `${base}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(safeAnswer)}${toneParam}`,
     );
   }
 
@@ -233,24 +242,52 @@ function ConversationContent() {
         </p>
 
         <h1 className="text-lg text-neutral-100">{mainQuestion}</h1>
-
         <p className="text-sm text-neutral-300">{supportText}</p>
 
-        <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-          <p className="text-xs text-neutral-400">You can start like this</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {starterSentences.map((starter) => (
-              <button
-                key={starter}
-                type="button"
-                onClick={() => insertText(starter)}
-                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
-              >
-                {starter}
-              </button>
-            ))}
+        {scenario ? (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <p className="text-xs text-neutral-400">
+              Choose how you want to sound
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(["formal", "neutral", "friendly"] as WorkScenarioTone[]).map(
+                (tone) => (
+                  <button
+                    key={tone}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTone(tone);
+                      insertText(scenario.toneStarters[tone]);
+                    }}
+                    className={`rounded-lg border px-3 py-2 text-sm hover:bg-neutral-800/70 ${
+                      selectedTone === tone
+                        ? "border-amber-600 bg-amber-950/30 text-amber-100"
+                        : "border-neutral-700 bg-neutral-900/50 text-neutral-200"
+                    }`}
+                  >
+                    {tone.charAt(0).toUpperCase() + tone.slice(1)}
+                  </button>
+                ),
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <p className="text-xs text-neutral-400">You can start like this</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {starterSentences.map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  onClick={() => insertText(starter)}
+                  className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+                >
+                  {starter}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
           <p className="text-xs text-neutral-400">Helpful words</p>
@@ -268,9 +305,19 @@ function ConversationContent() {
         </button>
 
         {showSampleAnswer ? (
-          <p className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3 text-sm text-neutral-300">
-            {sampleAnswer}
-          </p>
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-neutral-400">Simple answer</p>
+              <button
+                type="button"
+                onClick={() => speakText(sampleAnswer)}
+                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-1.5 text-xs text-neutral-200 hover:bg-neutral-800/70"
+              >
+                🔊 Listen
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">{sampleAnswer}</p>
+          </div>
         ) : null}
 
         <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
