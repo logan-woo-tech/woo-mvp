@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockConversation } from "../../mocks/conversation";
 
@@ -66,6 +66,24 @@ const ACTIVITY_ACCENT: Record<string, string> = {
   Mentor: "text-amber-200",
 };
 
+const ACTIVITY_HELPFUL_WORDS: Record<string, string[]> = {
+  "Inner Work": ["feeling", "need", "tension", "calm", "honest"],
+  Thinking: ["idea", "reason", "example", "problem", "result"],
+  "Free Talk": ["today", "stuck", "energy", "truth", "release"],
+  Mentor: ["goal", "obstacle", "step", "deadline", "commitment"],
+};
+
+const ACTIVITY_SAMPLE_ANSWER: Record<string, string> = {
+  "Inner Work":
+    "I feel a little scattered today because I am carrying too many open tasks. For example, I keep switching tabs and losing focus.",
+  Thinking:
+    "My idea is that short planning helps me start faster because it reduces decision fatigue. For example, a 5-minute plan helped me finish yesterday's task.",
+  "Free Talk":
+    "What feels most alive is a mix of excitement and pressure. I want to move forward, and I also want to give myself permission to go one step at a time.",
+  Mentor:
+    "My goal is to complete one meaningful task today because progress builds confidence. For example, I will draft section one before lunch and review it at 4 pm.",
+};
+
 function ConversationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,6 +111,16 @@ function ConversationContent() {
     ACTIVITY_PLACEHOLDER[activity] ?? "Write your answer here...";
   const activityIcon = ACTIVITY_ICON[activity] ?? "✨";
   const activityAccent = ACTIVITY_ACCENT[activity] ?? "text-neutral-300";
+  const helpfulWords = ACTIVITY_HELPFUL_WORDS[activity] ?? [
+    "clear",
+    "why",
+    "example",
+    "next step",
+  ];
+  const sampleAnswer =
+    ACTIVITY_SAMPLE_ANSWER[activity] ??
+    "I want to improve this area because it matters to me. For example, I can take one small step today.";
+  const [showSampleAnswer, setShowSampleAnswer] = useState(false);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,6 +146,27 @@ function ConversationContent() {
         <h1 className="text-lg text-neutral-100">{question}</h1>
 
         <p className="text-sm text-neutral-300">{supportText}</p>
+
+        <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <p className="text-xs text-neutral-400">Helpful words</p>
+          <p className="mt-1 text-sm text-neutral-300">
+            {helpfulWords.join(" • ")}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowSampleAnswer((prev) => !prev)}
+          className="w-fit rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+        >
+          {showSampleAnswer ? "Hide simple answer" : "Show me a simple answer"}
+        </button>
+
+        {showSampleAnswer ? (
+          <p className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3 text-sm text-neutral-300">
+            {sampleAnswer}
+          </p>
+        ) : null}
 
         <p className="text-xs text-neutral-400">Your answer</p>
 

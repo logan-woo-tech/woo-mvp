@@ -67,6 +67,25 @@ function getAnswerAwareFeedback(answer: string): string[] {
   return lines.slice(0, 2);
 }
 
+function getPracticalNextLine(answer: string): string {
+  const trimmed = answer.trim();
+  const normalized = trimmed.toLowerCase();
+
+  if (!normalized.includes("because")) {
+    return 'Try this next time: add one "because" sentence to explain your reason.';
+  }
+
+  if (!normalized.includes("for example") && !normalized.includes("example")) {
+    return "Try this next time: add one real example to make your point concrete.";
+  }
+
+  if (trimmed.length > 0 && trimmed.length < 100) {
+    return "Try this next time: stay with your answer a little longer and add one more layer.";
+  }
+
+  return 'Try this next time: Replace "very good" with "effective" or "clear".';
+}
+
 function FeedbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -88,6 +107,7 @@ function FeedbackContent() {
   const activityAccent = ACTIVITY_ACCENT[activity] ?? "text-neutral-300";
   const nextStepIcon = ACTIVITY_ICON[nextStep] ?? "✨";
   const answerAwareLines = getAnswerAwareFeedback(answer);
+  const practicalNextLine = getPracticalNextLine(answer);
   const reflectionSummary = answerAwareLines[0] ?? feedbackMessage;
 
   function handleContinue() {
@@ -124,6 +144,7 @@ function FeedbackContent() {
             ))}
           </div>
         ) : null}
+        <p className="text-sm text-neutral-300">{practicalNextLine}</p>
         <p className="text-sm text-neutral-300">{supportMessage}</p>
         <p className="text-sm font-medium text-yellow-200">
           Next step: {nextStepIcon} {nextStep}
