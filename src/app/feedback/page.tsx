@@ -191,6 +191,91 @@ function getWhatToChange(
   return "Tighten one phrase so your main point lands faster.";
 }
 
+function getRiskyPhrases(
+  answer: string,
+  scenarioId?: string | null,
+): Array<{
+  phrase: string;
+  why: string;
+  better: string;
+}> {
+  const normalized = answer.toLowerCase();
+  const matches: Array<{
+    phrase: string;
+    why: string;
+    better: string;
+  }> = [];
+
+  const generalRules = [
+    {
+      phrase: "as soon as possible",
+      why: "This sounds vague and does not create confidence.",
+      better: "Use a specific deadline like 'by tomorrow at 4 PM'.",
+    },
+    {
+      phrase: "try my best",
+      why: "This sounds weak and uncertain.",
+      better:
+        "Use a clear commitment like 'I will send the updated version by...'.",
+    },
+    {
+      phrase: "maybe",
+      why: "This can make your message sound unsure.",
+      better: "Use a more confident phrase with a clear next step.",
+    },
+    {
+      phrase: "hopefully",
+      why: "This can sound passive in professional updates.",
+      better: "State what you will do and when.",
+    },
+  ] as const;
+
+  const unhappyCustomerRules = [
+    {
+      phrase: "calm down",
+      why: "This can sound dismissive when the customer is upset.",
+      better:
+        "Acknowledge the frustration instead, e.g. 'I understand why this is frustrating.'",
+    },
+    {
+      phrase: "you misunderstood",
+      why: "This can sound defensive and escalate tension.",
+      better: "Clarify the issue calmly without blaming the customer.",
+    },
+    {
+      phrase: "it's not our fault",
+      why: "This can increase conflict and reduce trust.",
+      better: "Focus on what you can do next to resolve the issue.",
+    },
+    {
+      phrase: "please be patient",
+      why: "This can feel passive if you do not give a clear action or timeline.",
+      better: "Pair it with a specific action and timing.",
+    },
+  ] as const;
+
+  const rules =
+    scenarioId === "unhappy-customer"
+      ? [...generalRules, ...unhappyCustomerRules]
+      : [...generalRules];
+
+  for (const rule of rules) {
+    if (normalized.includes(rule.phrase)) {
+      matches.push({
+        phrase: rule.phrase,
+        why: rule.why,
+        better: rule.better,
+      });
+    }
+
+    if (matches.length >= 3) {
+      break;
+    }
+  }
+
+  return matches;
+}
+
 function buildScenarioBetterVersion(
   scenarioId: WorkScenarioId,
   tone: WorkScenarioTone,
@@ -310,6 +395,7 @@ function FeedbackContent() {
   const practicalNextLine = getPracticalNextLine(answer);
   const whatWorks = getWhatWorks(answer, scenario?.id);
   const whatToChange = getWhatToChange(answer, scenario?.id);
+  const riskyPhrases = getRiskyPhrases(answer, scenario?.id);
 
   const betterVersion =
     isScenarioMode && scenario
@@ -378,6 +464,27 @@ function FeedbackContent() {
               <span className="text-neutral-100">What to change:</span>{" "}
               {whatToChange}
             </p>
+
+            {isScenarioMode && riskyPhrases.length > 0 ? (
+              <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+                <p className="text-sm text-neutral-100">Risky phrase detected</p>
+
+                {riskyPhrases.map((item) => (
+                  <div key={item.phrase} className="flex flex-col gap-1">
+                    <p className="text-sm text-neutral-300">
+                      <span className="text-neutral-100">
+                        &quot;{item.phrase}&quot;
+                      </span>{" "}
+                      — {item.why}
+                    </p>
+                    <p className="text-sm text-neutral-300">
+                      <span className="text-neutral-100">Better:</span>{" "}
+                      {item.better}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <p className="text-sm text-neutral-300 md:flex-1">
