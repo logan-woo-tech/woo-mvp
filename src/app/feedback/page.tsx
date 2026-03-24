@@ -193,9 +193,13 @@ function FeedbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const activity = searchParams.get("activity") ?? "Inner Work";
   const scenarioIdParam = searchParams.get("scenario");
   const scenario = getWorkScenario(scenarioIdParam);
+  const isScenarioMode = Boolean(scenario);
+
+  const activityParam = searchParams.get("activity");
+  const activity = isScenarioMode ? null : (activityParam ?? "Inner Work");
+
   const tone =
     (searchParams.get("tone") as WorkScenarioTone | null) ?? "formal";
 
@@ -205,43 +209,38 @@ function FeedbackContent() {
     ? Math.max(0, growthSignal)
     : 0;
 
-  const isScenarioMode = Boolean(scenario);
   const scenarioMeta = scenario ? WORK_SCENARIO_META[scenario.id] : null;
-
-  const activityFeedbackMessage =
-    ACTIVITY_FEEDBACK[activity] ??
-    "You showed up with intention today. Keep this momentum going.";
-  const activitySupportMessage =
-    ACTIVITY_SUPPORT[activity] ??
-    "Keep moving with steady intention, one meaningful step at a time.";
-  const nextActivityStep = NEXT_ACTIVITY_STEP[activity] ?? "Inner Work";
 
   const feedbackMessage =
     isScenarioMode && scenarioMeta
       ? scenarioMeta.intro
-      : activityFeedbackMessage;
+      : (ACTIVITY_FEEDBACK[activity ?? "Inner Work"] ??
+        "You showed up with intention today. Keep this momentum going.");
 
   const supportMessage =
     isScenarioMode && scenarioMeta
       ? scenarioMeta.support
-      : activitySupportMessage;
+      : (ACTIVITY_SUPPORT[activity ?? "Inner Work"] ??
+        "Keep moving with steady intention, one meaningful step at a time.");
 
   const nextStepLabel =
     isScenarioMode && scenarioMeta
       ? scenarioMeta.nextStepLabel
-      : nextActivityStep;
+      : (NEXT_ACTIVITY_STEP[activity ?? "Inner Work"] ?? "Inner Work");
 
   const activityIcon = isScenarioMode
     ? "🧭"
-    : (ACTIVITY_ICON[activity] ?? "✨");
+    : (ACTIVITY_ICON[activity ?? "Inner Work"] ?? "✨");
 
   const activityAccent = isScenarioMode
     ? "text-amber-200"
-    : (ACTIVITY_ACCENT[activity] ?? "text-neutral-300");
+    : (ACTIVITY_ACCENT[activity ?? "Inner Work"] ?? "text-neutral-300");
 
   const nextStepIcon = isScenarioMode
     ? "🧭"
-    : (ACTIVITY_ICON[nextActivityStep] ?? "✨");
+    : (ACTIVITY_ICON[
+        NEXT_ACTIVITY_STEP[activity ?? "Inner Work"] ?? "Inner Work"
+      ] ?? "✨");
 
   const answerAwareLines = getAnswerAwareFeedback(answer);
   const practicalNextLine = getPracticalNextLine(answer);
@@ -284,7 +283,9 @@ function FeedbackContent() {
       <section className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-6">
         <p className={`text-xs ${activityAccent}`}>
           Completed: {activityIcon}{" "}
-          {isScenarioMode && scenario ? scenario.shortLabel : activity}
+          {isScenarioMode && scenario
+            ? scenario.shortLabel
+            : (activity ?? "Inner Work")}
         </p>
 
         <h1 className="text-lg text-neutral-100">Feedback</h1>
