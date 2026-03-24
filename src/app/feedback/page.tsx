@@ -27,13 +27,6 @@ const ACTIVITY_SUPPORT: Record<string, string> = {
   Mentor: "Now follow through with steady action.",
 };
 
-const NEXT_ACTIVITY_STEP: Record<string, string> = {
-  "Inner Work": "Thinking",
-  Thinking: "Free Talk",
-  "Free Talk": "Mentor",
-  Mentor: "Inner Work",
-};
-
 const ACTIVITY_ICON: Record<string, string> = {
   "Inner Work": "🫶",
   Thinking: "🧠",
@@ -115,48 +108,6 @@ function getPracticalNextLine(answer: string): string {
   }
 
   return "Try this next time: replace a general word with a more precise professional phrase.";
-}
-
-function getWhatWorks(
-  answer: string,
-  scenarioId?: WorkScenarioId | null,
-): string {
-  if (scenarioId === "delay-client") {
-    return "You explained the situation clearly instead of avoiding it.";
-  }
-
-  if (scenarioId === "unhappy-customer") {
-    return "You acknowledged the customer's frustration without becoming defensive.";
-  }
-
-  if (scenarioId === "ask-more-time") {
-    return "You proposed a clear new timeline instead of being vague.";
-  }
-
-  const trimmed = answer.trim();
-  const normalized = trimmed.toLowerCase();
-
-  if (
-    normalized.includes("delay") ||
-    normalized.includes("behind") ||
-    normalized.includes("issue")
-  ) {
-    return "You named the issue clearly instead of avoiding it.";
-  }
-
-  if (normalized.includes("because")) {
-    return "You explained your reason clearly.";
-  }
-
-  if (normalized.includes("for example") || normalized.includes("example")) {
-    return "You made your point concrete with an example.";
-  }
-
-  if (trimmed.length >= 120) {
-    return "You stayed with your message and gave useful detail.";
-  }
-
-  return "You communicated directly and kept a calm tone.";
 }
 
 function getWhatToChange(
@@ -435,12 +386,15 @@ function buildScenarioBetterVersion(
   return "We are sharing a clear update and will keep you informed.";
 }
 
-function speakText(text: string, rate = 0.95) {
+function speakText(text: string, rate = 0.95, onEnd?: () => void) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = rate;
+  utterance.onend = () => {
+    if (onEnd) onEnd();
+  };
   window.speechSynthesis.speak(utterance);
 }
 
@@ -488,11 +442,6 @@ function FeedbackContent() {
       : (ACTIVITY_SUPPORT[activity ?? "Inner Work"] ??
         "Keep moving with steady intention, one meaningful step at a time.");
 
-  const nextStepLabel =
-    isScenarioMode && scenarioMeta
-      ? scenarioMeta.nextStepLabel
-      : (NEXT_ACTIVITY_STEP[activity ?? "Inner Work"] ?? "Inner Work");
-
   const activityIcon = isScenarioMode
     ? "🧭"
     : (ACTIVITY_ICON[activity ?? "Inner Work"] ?? "✨");
@@ -501,15 +450,8 @@ function FeedbackContent() {
     ? "text-amber-200"
     : (ACTIVITY_ACCENT[activity ?? "Inner Work"] ?? "text-neutral-300");
 
-  const nextStepIcon = isScenarioMode
-    ? "🧭"
-    : (ACTIVITY_ICON[
-        NEXT_ACTIVITY_STEP[activity ?? "Inner Work"] ?? "Inner Work"
-      ] ?? "✨");
-
   const answerAwareLines = getAnswerAwareFeedback(answer);
   const practicalNextLine = getPracticalNextLine(answer);
-  const whatWorks = getWhatWorks(answer, scenario?.id);
   const whatToChange = getWhatToChange(answer, scenario?.id);
   const structureChecklist = getStructureChecklist(answer, scenario?.id);
   const structureDoneCount = structureChecklist.filter(
@@ -533,7 +475,12 @@ function FeedbackContent() {
   const [voiceRecordingUrl, setVoiceRecordingUrl] = useState<string | null>(
     null,
   );
+  const [showRepeatPrompt, setShowRepeatPrompt] = useState(false);
+  const [showCloserMessage, setShowCloserMessage] = useState(false);
+  const [showStructureDetails, setShowStructureDetails] = useState(false);
+  const [showWhyThisWorks, setShowWhyThisWorks] = useState(false);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const yourRecordingRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -541,11 +488,11 @@ function FeedbackContent() {
     startTransition(() => {
       setVoiceRecordingUrl(stored);
     });
+    sessionStorage.removeItem(VOICE_STORAGE_KEY);
   }, []);
 
   const reflectionSummary = answerAwareLines[0] ?? feedbackMessage;
-
-  function handleContinue() {
+  function handleBackToTree() {
     const nextGrowth = growthCount + 1;
 
     if (isScenarioMode) {
@@ -567,6 +514,17 @@ function FeedbackContent() {
     router.push(
       `/learner?growth=${nextGrowth}&last=${last}&well=${encodeURIComponent(reflectionSummary)}`,
     );
+  }
+
+  function handleNextChallenge() {
+    const nextGrowth = growthCount + 1;
+    if (isScenarioMode && scenarioMeta?.nextStepScenarioId) {
+      router.push(
+        `/conversation?scenario=${encodeURIComponent(scenarioMeta.nextStepScenarioId)}&growth=${nextGrowth}`,
+      );
+      return;
+    }
+    handleBackToTree();
   }
 
   return (
@@ -597,7 +555,10 @@ function FeedbackContent() {
         <p className="text-sm text-neutral-300">{practicalNextLine}</p>
 
         {!isScenarioMode && voiceRecordingUrl ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <div
+            ref={yourRecordingRef}
+            className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3"
+          >
             <p className="text-xs text-neutral-400">Your recording</p>
             <audio
               ref={voiceAudioRef}
@@ -613,7 +574,10 @@ function FeedbackContent() {
               ▶️ Play
             </button>
             <p className="mt-2 text-xs text-neutral-400">
-              Notice how your version sounds compared with the better version.
+              Which one sounds more confident — yours or this version?
+            </p>
+            <p className="text-xs text-neutral-400">
+              Now try saying this version out loud.
             </p>
           </div>
         ) : null}
@@ -621,10 +585,7 @@ function FeedbackContent() {
         {isScenarioMode ? (
           <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
             <p className="text-sm text-neutral-300">
-              <span className="text-neutral-100">What works:</span> {whatWorks}
-            </p>
-            <p className="text-sm text-neutral-300">
-              <span className="text-neutral-100">What to change:</span>{" "}
+              <span className="text-neutral-100">Primary fix:</span>{" "}
               {whatToChange}
             </p>
 
@@ -633,31 +594,44 @@ function FeedbackContent() {
                 <p className="text-sm text-neutral-100">
                   What a strong reply needs
                 </p>
-                {structureSummaryLine ? (
-                  <p className="text-xs text-neutral-400">
-                    {structureSummaryLine}
-                  </p>
-                ) : null}
-                <div className="flex flex-col gap-1.5">
-                  {structureChecklist.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm ${
-                        item.status === "done"
-                          ? "border-emerald-800/60 bg-emerald-950/20 text-emerald-200"
-                          : "border-red-800/60 bg-red-950/20 text-red-300"
-                      }`}
-                    >
-                      <span className="shrink-0" aria-hidden="true">
-                        {item.status === "done" ? "✓" : "✗"}
-                      </span>
-                      <span className="min-w-0 flex-1">{item.label}</span>
+                <p className="text-xs text-neutral-400">Start with one:</p>
+                <p className="text-xs text-neutral-400">Show empathy first</p>
+                <button
+                  type="button"
+                  onClick={() => setShowStructureDetails((prev) => !prev)}
+                  className="w-fit rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                >
+                  {showStructureDetails ? "Hide details" : "Show details"}
+                </button>
+                {showStructureDetails ? (
+                  <>
+                    {structureSummaryLine ? (
+                      <p className="text-xs text-neutral-400">
+                        {structureSummaryLine}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-col gap-1.5">
+                      {structureChecklist.map((item) => (
+                        <div
+                          key={item.label}
+                          className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm ${
+                            item.status === "done"
+                              ? "border-emerald-800/60 bg-emerald-950/20 text-emerald-200"
+                              : "border-amber-800/60 bg-amber-950/20 text-amber-200"
+                          }`}
+                        >
+                          <span className="shrink-0" aria-hidden="true">
+                            {item.status === "done" ? "✓" : "○"}
+                          </span>
+                          <span className="min-w-0 flex-1">{item.label}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <p className="text-xs text-neutral-400">
-                  Use the missing parts to improve your next draft.
-                </p>
+                    <p className="text-xs text-neutral-400">
+                      Use the missing parts to improve your next draft.
+                    </p>
+                  </>
+                ) : null}
               </div>
             ) : null}
 
@@ -683,7 +657,10 @@ function FeedbackContent() {
             ) : null}
 
             {voiceRecordingUrl ? (
-              <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+              <div
+                ref={yourRecordingRef}
+                className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3"
+              >
                 <p className="text-xs text-neutral-400">Your recording</p>
                 <audio
                   ref={voiceAudioRef}
@@ -699,19 +676,22 @@ function FeedbackContent() {
                   ▶️ Play
                 </button>
                 <p className="mt-2 text-xs text-neutral-400">
-                  Notice how your version sounds compared with the better
-                  version.
+                  Which one sounds more confident — yours or this version?
+                </p>
+                <p className="text-xs text-neutral-400">
+                  Now try saying this version out loud.
                 </p>
               </div>
             ) : null}
 
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <p className="text-sm text-neutral-300 md:flex-1">
-                <span className="text-neutral-100">Better version:</span>{" "}
+            <div className="w-full">
+              <p className="text-sm text-neutral-300">
+                <span className="text-neutral-100">Better version:</span>
+              </p>
+              <p className="mt-1 whitespace-pre-line break-words text-sm leading-relaxed text-neutral-300">
                 {betterVersion}
               </p>
-
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => speakText(betterVersion)}
@@ -728,39 +708,76 @@ function FeedbackContent() {
                 </button>
                 <button
                   type="button"
+                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  onClick={() => {
+                    speakText(betterVersion, 0.95, () => {
+                      yourRecordingRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                      setShowRepeatPrompt(true);
+                      setShowCloserMessage(true);
+                    });
+                  }}
+                >
+                  🎙️ Say this version
+                </button>
+                <button
+                  type="button"
                   onClick={() => void copyText(betterVersion)}
                   className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
                 >
-                  Copy better version
+                  Copy and send
                 </button>
               </div>
-              <p className="text-xs text-neutral-400 md:basis-full">
-                Try the slow version first, then compare it with your own
-                recording.
+              <p className="mt-1 text-xs text-neutral-400">
+                Say it now — don’t think, just speak.
               </p>
+              {showRepeatPrompt ? (
+                <div className="mt-2 text-sm text-yellow-200">
+                  Now record your new version.
+                </div>
+              ) : null}
+              {showCloserMessage ? (
+                <p className="mt-1 text-sm text-emerald-200">That was closer.</p>
+              ) : null}
             </div>
 
             {isScenarioMode && whyThisWorks ? (
               <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-                <p className="text-xs text-neutral-400">Why this works</p>
-                <p className="mt-1 text-sm text-neutral-300">{whyThisWorks}</p>
+                <button
+                  type="button"
+                  onClick={() => setShowWhyThisWorks((prev) => !prev)}
+                  className="text-xs text-neutral-400 hover:text-neutral-300"
+                >
+                  Why this works
+                </button>
+                {showWhyThisWorks ? (
+                  <p className="mt-1 text-sm text-neutral-300">{whyThisWorks}</p>
+                ) : null}
               </div>
             ) : null}
           </div>
         ) : null}
 
         <p className="text-sm text-neutral-300">{supportMessage}</p>
-
-        <p className="text-sm font-medium text-yellow-200">
-          Next step: {nextStepIcon} {nextStepLabel}
+        <p className="text-xs text-neutral-400">
+          Keep going — one more challenge will make this easier.
         </p>
 
         <button
           type="button"
-          onClick={handleContinue}
+          onClick={handleNextChallenge}
           className="w-fit rounded-lg border border-neutral-700 bg-neutral-900/60 px-4 py-2 text-sm text-neutral-100 hover:bg-neutral-800/70"
         >
-          Back to your tree
+          Continue to next challenge
+        </button>
+        <button
+          type="button"
+          onClick={handleBackToTree}
+          className="w-fit text-xs text-neutral-400 underline-offset-2 hover:text-neutral-300 hover:underline"
+        >
+          Go back to your tree
         </button>
       </section>
     </main>

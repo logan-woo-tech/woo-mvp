@@ -536,6 +536,12 @@ function ConversationContent() {
           </p>
         ) : null}
 
+        {audioUrl ? (
+          <p className="text-xs text-neutral-400">
+            Say it again — this time more clearly.
+          </p>
+        ) : null}
+
         <button
           type="submit"
           disabled={isRecording}
