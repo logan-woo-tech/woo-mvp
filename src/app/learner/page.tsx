@@ -252,6 +252,15 @@ export default async function LearnerPage({ searchParams }: LearnerPageProps) {
 
         <div className="flex flex-col gap-3">
           <p className="text-xs text-neutral-400">Work scenarios</p>
+          <Link
+            href={`/conversation?scenario=delay-client&growth=${growthCount}&mode=quick`}
+            className="rounded-xl border border-neutral-700 bg-neutral-900/40 px-5 py-3 text-left text-sm text-neutral-100 hover:bg-neutral-800/70"
+          >
+            <span className="block font-medium">⚡ Quick practice (30s)</span>
+            <span className="mt-1 block text-xs text-neutral-300">
+              Fast scenario loop: respond, record, improve.
+            </span>
+          </Link>
 
           <Link
             href={`/conversation?scenario=delay-client&growth=${growthCount}`}

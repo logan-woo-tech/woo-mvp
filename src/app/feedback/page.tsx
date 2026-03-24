@@ -7,6 +7,7 @@ import {
   type WorkScenarioId,
   type WorkScenarioTone,
 } from "../../mocks/workScenarios";
+import { getQuickScenario } from "../../mocks/quickScenarios";
 
 const VOICE_STORAGE_KEY = "woo_voice_practice_v1";
 
@@ -430,9 +431,14 @@ async function copyText(text: string) {
 function FeedbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const mode = searchParams.get("mode");
+  const isQuickMode = mode === "quick";
 
   const scenarioIdParam = searchParams.get("scenario");
   const scenario = getWorkScenario(scenarioIdParam);
+  const quickScenario = isQuickMode
+    ? getQuickScenario(scenarioIdParam) ?? getQuickScenario("unhappy-customer-quick")
+    : null;
   const isScenarioMode = Boolean(scenario);
 
   const activityParam = searchParams.get("activity");
@@ -512,6 +518,9 @@ function FeedbackContent() {
     ? getWorkScenario(scenarioMeta.nextStepScenarioId)
     : null;
   const nextScenarioGoal = nextScenario?.focus ?? "";
+  const nextQuickScenario = quickScenario?.nextScenarioId
+    ? getQuickScenario(quickScenario.nextScenarioId)
+    : null;
   function handleBackToTree() {
     const nextGrowth = growthCount + 1;
 
@@ -538,6 +547,12 @@ function FeedbackContent() {
 
   function handleNextChallenge() {
     const nextGrowth = growthCount + 1;
+    if (isQuickMode && nextQuickScenario) {
+      router.push(
+        `/conversation?scenario=${encodeURIComponent(nextQuickScenario.id)}&growth=${nextGrowth}&mode=quick&well=${encodeURIComponent(reflectionSummary)}`,
+      );
+      return;
+    }
     if (isScenarioMode && scenarioMeta?.nextStepScenarioId) {
       router.push(
         `/conversation?scenario=${encodeURIComponent(scenarioMeta.nextStepScenarioId)}&growth=${nextGrowth}&well=${encodeURIComponent(reflectionSummary)}`,
@@ -560,9 +575,11 @@ function FeedbackContent() {
         <h1 className="text-lg text-neutral-100">Feedback</h1>
         <p className="text-sm font-medium text-neutral-100">Growth +1</p>
 
-        <p className="text-sm text-neutral-300">{feedbackMessage}</p>
+        {!isQuickMode ? (
+          <p className="text-sm text-neutral-300">{feedbackMessage}</p>
+        ) : null}
 
-        {answerAwareLines.length > 0 ? (
+        {!isQuickMode && answerAwareLines.length > 0 ? (
           <div className="flex flex-col gap-1">
             {answerAwareLines.map((line) => (
               <p key={line} className="text-sm text-neutral-300">
@@ -572,7 +589,9 @@ function FeedbackContent() {
           </div>
         ) : null}
 
-        <p className="text-sm text-neutral-300">{practicalNextLine}</p>
+        {!isQuickMode ? (
+          <p className="text-sm text-neutral-300">{practicalNextLine}</p>
+        ) : null}
 
         {!isScenarioMode && voiceRecordingUrl ? (
           <div
@@ -602,7 +621,69 @@ function FeedbackContent() {
           </div>
         ) : null}
 
-        {isScenarioMode ? (
+        {isQuickMode && quickScenario ? (
+          <div className="flex flex-col gap-3 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <p className="text-sm text-neutral-300">
+              <span className="text-neutral-100">Primary fix:</span>{" "}
+              {quickScenario.primaryFix}
+            </p>
+            {voiceRecordingUrl ? (
+              <div
+                ref={yourRecordingRef}
+                className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3"
+              >
+                <p className="text-xs text-neutral-400">Your recording</p>
+                <audio
+                  ref={voiceAudioRef}
+                  src={voiceRecordingUrl}
+                  preload="auto"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => void voiceAudioRef.current?.play()}
+                  className="mt-2 rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                >
+                  ▶️ Play
+                </button>
+              </div>
+            ) : null}
+            <div className="w-full">
+              <p className="text-sm text-neutral-300">
+                <span className="text-neutral-100">Better version:</span>{" "}
+                {quickScenario.betterVersion}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  onClick={() => {
+                    speakText(quickScenario.betterVersion, 0.95, () => {
+                      yourRecordingRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                      setShowRepeatPrompt(true);
+                      setShowCloserMessage(true);
+                    });
+                  }}
+                >
+                  🎙️ Say this version
+                </button>
+              </div>
+              {showRepeatPrompt ? (
+                <div className="mt-2 text-sm text-yellow-200">
+                  Now record your new version.
+                </div>
+              ) : null}
+              {showCloserMessage ? (
+                <p className="mt-1 text-sm text-emerald-200">That was closer.</p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {!isQuickMode && isScenarioMode ? (
           <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
             <p className="text-sm text-neutral-300">
               <span className="text-neutral-100">Primary fix:</span>{" "}
@@ -775,17 +856,19 @@ function FeedbackContent() {
           </div>
         ) : null}
 
-        <p className="text-sm text-neutral-300">{supportMessage}</p>
-        {nextScenario ? (
+        {!isQuickMode ? <p className="text-sm text-neutral-300">{supportMessage}</p> : null}
+        {!isQuickMode && nextScenario ? (
           <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
             <p className="text-xs text-neutral-400">Next challenge</p>
             <p className="mt-1 text-sm text-neutral-200">🧭 {nextScenario.title}</p>
             <p className="mt-1 text-xs text-neutral-400">{nextScenarioGoal}</p>
           </div>
         ) : null}
-        <p className="text-xs text-neutral-400">
-          Keep going — one more challenge will make this easier.
-        </p>
+        {!isQuickMode ? (
+          <p className="text-xs text-neutral-400">
+            Keep going — one more challenge will make this easier.
+          </p>
+        ) : null}
 
         <button
           type="button"

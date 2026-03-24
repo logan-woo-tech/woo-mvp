@@ -7,6 +7,7 @@ import {
   getWorkScenario,
   type WorkScenarioTone,
 } from "../../mocks/workScenarios";
+import { getQuickScenario } from "../../mocks/quickScenarios";
 
 const ACTIVITY_QUESTIONS: Record<string, string[]> = {
   "Inner Work": [
@@ -188,6 +189,11 @@ function ConversationContent() {
   const activity = searchParams.get("activity") ?? "Inner Work";
   const scenarioId = searchParams.get("scenario");
   const scenario = getWorkScenario(scenarioId);
+  const mode = searchParams.get("mode");
+  const isQuickMode = mode === "quick";
+  const quickScenario = isQuickMode
+    ? getQuickScenario(scenarioId) ?? getQuickScenario("unhappy-customer-quick")
+    : null;
 
   const growthSignal = Number(searchParams.get("growth") ?? "0");
   const growthCount = Number.isFinite(growthSignal)
@@ -250,7 +256,11 @@ function ConversationContent() {
     : (ACTIVITY_SAMPLE_ANSWER[activity] ??
       "I want to improve this area because it matters to me. For example, I can take one small step today.");
 
-  const mainQuestion = scenario ? scenario.question : activityQuestion;
+  const mainQuestion = isQuickMode
+    ? (quickScenario?.prompt ?? "Give a clear response in 1-2 sentences.")
+    : scenario
+      ? scenario.question
+      : activityQuestion;
   const difficultyLabel = getDifficultyLabel(growthCount);
   const liveHints = buildLiveHints(answer, scenarioId);
 
@@ -351,6 +361,7 @@ function ConversationContent() {
     const toneParam = scenario
       ? `&tone=${encodeURIComponent(selectedTone)}`
       : "";
+    const modeParam = isQuickMode ? "&mode=quick" : "";
 
     if (recordedBlobRef.current) {
       try {
@@ -364,7 +375,7 @@ function ConversationContent() {
     }
 
     router.push(
-      `${base}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(safeAnswer)}${toneParam}`,
+      `${base}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(safeAnswer)}${toneParam}${modeParam}`,
     );
   }
 
@@ -388,15 +399,26 @@ function ConversationContent() {
           ) : null}
         </div>
 
-        <p className="text-xs text-neutral-300">{framing}</p>
-        <p className="text-xs text-neutral-400">
-          Difficulty: {difficultyLabel}
-        </p>
+        {isQuickMode ? (
+          <>
+            <p className="text-xs text-neutral-400">Situation</p>
+            <p className="text-sm text-neutral-300">
+              {quickScenario?.situation ?? supportText}
+            </p>
+            <h1 className="text-base text-neutral-100">{mainQuestion}</h1>
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-neutral-300">{framing}</p>
+            <p className="text-xs text-neutral-400">
+              Difficulty: {difficultyLabel}
+            </p>
+            <h1 className="text-lg text-neutral-100">{mainQuestion}</h1>
+            <p className="text-sm text-neutral-300">{supportText}</p>
+          </>
+        )}
 
-        <h1 className="text-lg text-neutral-100">{mainQuestion}</h1>
-        <p className="text-sm text-neutral-300">{supportText}</p>
-
-        {scenario ? (
+        {!isQuickMode && scenario ? (
           <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
             <p className="text-xs text-neutral-400">
               Choose how you want to sound
@@ -423,7 +445,7 @@ function ConversationContent() {
               )}
             </div>
           </div>
-        ) : (
+        ) : !isQuickMode ? (
           <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
             <p className="text-xs text-neutral-400">You can start like this</p>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -439,24 +461,28 @@ function ConversationContent() {
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
-        <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+        {!isQuickMode ? (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
           <p className="text-xs text-neutral-400">Helpful words</p>
           <p className="mt-1 text-sm text-neutral-300">
             {helpfulWords.join(" • ")}
           </p>
-        </div>
+          </div>
+        ) : null}
 
-        <button
+        {!isQuickMode ? (
+          <button
           type="button"
           onClick={() => setShowSampleAnswer((prev) => !prev)}
           className="w-fit rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
         >
           {showSampleAnswer ? "Hide simple answer" : "Show me a simple answer"}
-        </button>
+          </button>
+        ) : null}
 
-        {showSampleAnswer ? (
+        {!isQuickMode && showSampleAnswer ? (
           <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-neutral-400">Simple answer</p>
@@ -472,7 +498,8 @@ function ConversationContent() {
           </div>
         ) : null}
 
-        <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+        {!isQuickMode ? (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
           <p className="text-xs text-neutral-400">
             Take your time. You can start with one word.
           </p>
@@ -486,7 +513,8 @@ function ConversationContent() {
               <p className="text-sm text-emerald-200">Good — keep going.</p>
             ) : null}
           </div>
-        </div>
+          </div>
+        ) : null}
 
         <p className="text-xs text-neutral-400">Your answer</p>
 
@@ -495,7 +523,7 @@ function ConversationContent() {
           name="answer"
           value={answer}
           onChange={(event) => setAnswer(event.target.value)}
-          rows={6}
+          rows={isQuickMode ? 3 : 6}
           placeholder={placeholder}
           className="w-full rounded-xl border border-neutral-700 bg-neutral-950/70 px-4 py-3 text-sm text-neutral-100 outline-none placeholder:text-neutral-500 focus:border-neutral-500"
         />
@@ -528,7 +556,7 @@ function ConversationContent() {
           ) : null}
         </div>
 
-        {audioUrl ? (
+        {!isQuickMode && audioUrl ? (
           <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
             <p className="text-xs text-neutral-400">Listen for this</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-300">
@@ -539,13 +567,13 @@ function ConversationContent() {
           </div>
         ) : null}
 
-        {audioUrl ? (
+        {!isQuickMode && audioUrl ? (
           <p className="text-xs text-neutral-400">
             This is normal. Improvement starts when you hear the gap.
           </p>
         ) : null}
 
-        {audioUrl ? (
+        {!isQuickMode && audioUrl ? (
           <p className="text-xs text-neutral-400">
             Say it again — this time more clearly.
           </p>
