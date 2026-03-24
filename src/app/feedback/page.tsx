@@ -191,6 +191,104 @@ function getWhatToChange(
   return "Tighten one phrase so your main point lands faster.";
 }
 
+type StructureItem = {
+  label: string;
+  status: "done" | "missing";
+};
+
+function getStructureChecklist(
+  answer: string,
+  scenarioId?: string,
+): StructureItem[] {
+  const normalized = answer.toLowerCase();
+  const hasDigit = /\d/.test(answer);
+  const hasTimelineHint =
+    hasDigit ||
+    normalized.includes("pm") ||
+    normalized.includes("am") ||
+    normalized.includes("tomorrow");
+
+  if (scenarioId === "delay-client") {
+    return [
+      { label: "Acknowledge the issue", status: "done" },
+      {
+        label: "Explain the reason",
+        status: normalized.includes("because") ? "done" : "missing",
+      },
+      {
+        label: "Give a clear timeline",
+        status: hasTimelineHint ? "done" : "missing",
+      },
+      {
+        label: "Reassure the client",
+        status:
+          normalized.includes("update") ||
+          normalized.includes("fix") ||
+          normalized.includes("ensure")
+            ? "done"
+            : "missing",
+      },
+    ];
+  }
+
+  if (scenarioId === "unhappy-customer") {
+    return [
+      {
+        label: "Show empathy",
+        status:
+          normalized.includes("understand") ||
+          normalized.includes("sorry") ||
+          normalized.includes("frustrating")
+            ? "done"
+            : "missing",
+      },
+      {
+        label: "Take responsibility",
+        status: normalized.includes("we") ? "done" : "missing",
+      },
+      {
+        label: "Offer a solution",
+        status:
+          normalized.includes("fix") || normalized.includes("resolve")
+            ? "done"
+            : "missing",
+      },
+      {
+        label: "Give a follow-up",
+        status:
+          normalized.includes("update") || normalized.includes("soon")
+            ? "done"
+            : "missing",
+      },
+    ];
+  }
+
+  if (scenarioId === "ask-more-time") {
+    const weakConfidence =
+      /\bmaybe\b/.test(normalized) ||
+      /\btry\b/.test(normalized) ||
+      /\bhopefully\b/.test(normalized);
+
+    return [
+      { label: "Set the context", status: "done" },
+      {
+        label: "Explain why",
+        status: normalized.includes("because") ? "done" : "missing",
+      },
+      {
+        label: "Give a specific deadline",
+        status: hasTimelineHint ? "done" : "missing",
+      },
+      {
+        label: "Sound confident",
+        status: weakConfidence ? "missing" : "done",
+      },
+    ];
+  }
+
+  return [];
+}
+
 function getRiskyPhrases(
   answer: string,
   scenarioId?: string | null,
@@ -395,6 +493,17 @@ function FeedbackContent() {
   const practicalNextLine = getPracticalNextLine(answer);
   const whatWorks = getWhatWorks(answer, scenario?.id);
   const whatToChange = getWhatToChange(answer, scenario?.id);
+  const structureChecklist = getStructureChecklist(answer, scenario?.id);
+  const structureDoneCount = structureChecklist.filter(
+    (item) => item.status === "done",
+  ).length;
+  const structureTotalCount = structureChecklist.length;
+  const structureSummaryLine =
+    structureTotalCount > 0 && structureDoneCount === structureTotalCount
+      ? "Your reply already includes the key parts."
+      : structureTotalCount > 0
+        ? `${structureDoneCount} of ${structureTotalCount} parts are already strong.`
+        : "";
   const riskyPhrases = getRiskyPhrases(answer, scenario?.id);
 
   const betterVersion =
@@ -464,6 +573,39 @@ function FeedbackContent() {
               <span className="text-neutral-100">What to change:</span>{" "}
               {whatToChange}
             </p>
+
+            {structureChecklist.length > 0 ? (
+              <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+                <p className="text-sm text-neutral-100">
+                  What a strong reply needs
+                </p>
+                {structureSummaryLine ? (
+                  <p className="text-xs text-neutral-400">
+                    {structureSummaryLine}
+                  </p>
+                ) : null}
+                <div className="flex flex-col gap-1.5">
+                  {structureChecklist.map((item) => (
+                    <div
+                      key={item.label}
+                      className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm ${
+                        item.status === "done"
+                          ? "border-emerald-800/60 bg-emerald-950/20 text-emerald-200"
+                          : "border-red-800/60 bg-red-950/20 text-red-300"
+                      }`}
+                    >
+                      <span className="shrink-0" aria-hidden="true">
+                        {item.status === "done" ? "✓" : "✗"}
+                      </span>
+                      <span className="min-w-0 flex-1">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-neutral-400">
+                  Use the missing parts to improve your next draft.
+                </p>
+              </div>
+            ) : null}
 
             {isScenarioMode && riskyPhrases.length > 0 ? (
               <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
