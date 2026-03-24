@@ -1,5 +1,8 @@
 export type WorkScenarioTone = "formal" | "neutral" | "friendly";
-export type WorkScenarioId = "delay-client" | "unhappy-customer";
+export type WorkScenarioId =
+  | "delay-client"
+  | "unhappy-customer"
+  | "ask-more-time";
 
 export type WorkScenario = {
   id: WorkScenarioId;
@@ -78,6 +81,37 @@ export const WORK_SCENARIOS: Record<WorkScenarioId, WorkScenario> = {
     ],
     sampleAnswer:
       "I understand how frustrating this must be because the delay affected your plan. For example, your order did not arrive on time. We are fixing this now and will update you within the next hour.",
+  },
+  "ask-more-time": {
+    id: "ask-more-time",
+    title: "Ask for more time professionally",
+    shortLabel: "Ask for more time",
+    description: "Request more time without sounding weak or unclear.",
+    focus: "Be honest, give a reason, and propose a clear new deadline.",
+    context:
+      "You cannot meet the original deadline and need to ask for more time while maintaining trust.",
+    question: "How would you ask for more time clearly and professionally?",
+    toneStarters: {
+      formal: "I would like to request a slight extension on the deadline...",
+      neutral: "I need a bit more time to complete this...",
+      friendly: "Quick note — I may need a little more time on this...",
+    },
+    helpfulWords: [
+      "deadline",
+      "extension",
+      "complete",
+      "finalize",
+      "quality",
+      "deliver",
+      "timeline",
+    ],
+    starterSentences: [
+      "I need more time because...",
+      "The current situation is...",
+      "I can deliver this by...",
+    ],
+    sampleAnswer:
+      "I need a bit more time because I am finalizing the last details. For example, I am still validating the final output to ensure quality. I can deliver the completed version by tomorrow at 4 PM.",
   },
 };
 

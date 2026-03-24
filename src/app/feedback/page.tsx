@@ -65,6 +65,11 @@ const WORK_SCENARIO_META: Record<
     support: "Lead with empathy, then move clearly to a solution.",
     nextStepLabel: "Ask for more time professionally",
   },
+  "ask-more-time": {
+    intro: "You communicated the delay clearly without sounding uncertain.",
+    support: "Be specific with your new deadline and show control of the situation.",
+    nextStepLabel: "Explain a delay to a client",
+  },
 };
 
 function getAnswerAwareFeedback(answer: string): string[] {
@@ -110,7 +115,22 @@ function getPracticalNextLine(answer: string): string {
   return "Try this next time: replace a general word with a more precise professional phrase.";
 }
 
-function getWhatWorks(answer: string): string {
+function getWhatWorks(
+  answer: string,
+  scenarioId?: WorkScenarioId | null,
+): string {
+  if (scenarioId === "delay-client") {
+    return "You explained the situation clearly instead of avoiding it.";
+  }
+
+  if (scenarioId === "unhappy-customer") {
+    return "You acknowledged the customer's frustration without becoming defensive.";
+  }
+
+  if (scenarioId === "ask-more-time") {
+    return "You proposed a clear new timeline instead of being vague.";
+  }
+
   const trimmed = answer.trim();
   const normalized = trimmed.toLowerCase();
 
@@ -137,7 +157,22 @@ function getWhatWorks(answer: string): string {
   return "You communicated directly and kept a calm tone.";
 }
 
-function getWhatToChange(answer: string): string {
+function getWhatToChange(
+  answer: string,
+  scenarioId?: WorkScenarioId | null,
+): string {
+  if (scenarioId === "delay-client") {
+    return "Make your new timeline more specific.";
+  }
+
+  if (scenarioId === "unhappy-customer") {
+    return "Focus more on empathy before explaining the issue.";
+  }
+
+  if (scenarioId === "ask-more-time") {
+    return "Make your deadline more precise and confident.";
+  }
+
   const trimmed = answer.trim();
   const normalized = trimmed.toLowerCase();
 
@@ -160,6 +195,18 @@ function buildScenarioBetterVersion(
   scenarioId: WorkScenarioId,
   tone: WorkScenarioTone,
 ): string {
+  if (scenarioId === "ask-more-time") {
+    if (tone === "formal") {
+      return "I would like to request a short extension on the deadline because I am finalizing the last details. To ensure quality, I can deliver the completed version by tomorrow at 4 PM.";
+    }
+
+    if (tone === "neutral") {
+      return "I need a bit more time because I am finalizing the last details. I can deliver the completed version by tomorrow at 4 PM.";
+    }
+
+    return "Quick update — I may need a bit more time because I’m finishing the last details. I can send it by tomorrow at 4 PM.";
+  }
+
   if (scenarioId === "unhappy-customer") {
     if (tone === "formal") {
       return "I understand your concern and appreciate you bringing this up. This happened because of a delay in our process. We are resolving it now and will update you shortly.";
@@ -261,8 +308,8 @@ function FeedbackContent() {
 
   const answerAwareLines = getAnswerAwareFeedback(answer);
   const practicalNextLine = getPracticalNextLine(answer);
-  const whatWorks = getWhatWorks(answer);
-  const whatToChange = getWhatToChange(answer);
+  const whatWorks = getWhatWorks(answer, scenario?.id);
+  const whatToChange = getWhatToChange(answer, scenario?.id);
 
   const betterVersion =
     isScenarioMode && scenario

@@ -280,6 +280,21 @@ export default async function LearnerPage({ searchParams }: LearnerPageProps) {
               Use this before replying to a real customer.
             </span>
           </Link>
+
+          <Link
+            href={`/conversation?scenario=ask-more-time&growth=${growthCount}`}
+            className="rounded-xl border border-amber-700/50 bg-amber-950/20 px-5 py-4 text-left text-sm text-amber-100 hover:bg-amber-900/30"
+          >
+            <span className="block font-medium">
+              🧭 Ask for more time professionally
+            </span>
+            <span className="mt-1 block text-xs text-amber-200/80">
+              Request more time without sounding weak.
+            </span>
+            <span className="mt-1 block text-xs text-amber-200/80">
+              Use this before sending a real update.
+            </span>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

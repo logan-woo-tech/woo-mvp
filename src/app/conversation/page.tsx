@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useMemo, useRef, useState } from "react";
+import React, { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockConversation } from "../../mocks/conversation";
 import {
@@ -94,19 +94,44 @@ function getDifficultyLabel(growthCount: number) {
   return "Simple";
 }
 
-function buildLiveHints(answer: string): string[] {
+function buildLiveHints(
+  answer: string,
+  scenarioId: string | null | undefined,
+): string[] {
   const trimmed = answer.trim();
   const normalized = trimmed.toLowerCase();
-  const hints: string[] = [];
+  if (scenarioId === "delay-client") {
+    const hints: string[] = [];
+    if (!normalized.includes("because")) {
+      hints.push("Explain the reason clearly.");
+    }
+    if (!normalized.includes("for example") && !normalized.includes("example")) {
+      hints.push("Add one concrete example.");
+    }
+    return hints.slice(0, 2);
+  }
 
+  if (scenarioId === "unhappy-customer") {
+    return [
+      "Acknowledge the customer's frustration first.",
+      "Then explain what you will do to fix it.",
+    ];
+  }
+
+  if (scenarioId === "ask-more-time") {
+    return [
+      "Be clear about your new deadline.",
+      "Avoid vague phrases like 'as soon as possible'.",
+    ];
+  }
+
+  const hints: string[] = [];
   if (trimmed.length > 0 && trimmed.length < 30) {
     hints.push("Add one more detail.");
   }
-
   if (!normalized.includes("because")) {
     hints.push('Add "because..." to explain your reason.');
   }
-
   if (
     normalized.includes("because") &&
     !normalized.includes("for example") &&
@@ -114,7 +139,6 @@ function buildLiveHints(answer: string): string[] {
   ) {
     hints.push("Good — now add one example.");
   }
-
   return hints.slice(0, 2);
 }
 
@@ -196,7 +220,7 @@ function ConversationContent() {
 
   const mainQuestion = scenario ? scenario.question : activityQuestion;
   const difficultyLabel = getDifficultyLabel(growthCount);
-  const liveHints = useMemo(() => buildLiveHints(answer), [answer]);
+  const liveHints = buildLiveHints(answer, scenarioId);
 
   function insertText(text: string) {
     setAnswer(text);
