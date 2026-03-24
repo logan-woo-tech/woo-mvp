@@ -151,10 +151,39 @@ function speakText(text: string) {
   window.speechSynthesis.speak(utterance);
 }
 
+const VOICE_STORAGE_KEY = "woo_voice_practice_v1";
+
+function pickAudioMimeType(): string | undefined {
+  if (typeof MediaRecorder === "undefined") return undefined;
+  const types = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+  ] as const;
+  for (const t of types) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return undefined;
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.readAsDataURL(blob);
+  });
+}
+
 function ConversationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaChunksRef = useRef<BlobPart[]>([]);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const recordedBlobRef = useRef<Blob | null>(null);
+  const playbackAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const activity = searchParams.get("activity") ?? "Inner Work";
   const scenarioId = searchParams.get("scenario");
@@ -169,6 +198,8 @@ function ConversationContent() {
   const [selectedTone, setSelectedTone] = useState<WorkScenarioTone>("formal");
   const [answer, setAnswer] = useState("");
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const fallbackQuestion =
     mockConversation.find((message) => message.role === "coach")?.text ??
@@ -231,7 +262,84 @@ function ConversationContent() {
     });
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function toggleVoiceRecording() {
+    if (isRecording && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      mediaChunksRef.current = [];
+      const mimeType = pickAudioMimeType();
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          mediaChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        const blob = new Blob(mediaChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        recordedBlobRef.current = blob;
+        setAudioUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return URL.createObjectURL(blob);
+        });
+      };
+
+      recorder.start(200);
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+    }
+  }
+
+  function playYourRecording(rate = 1) {
+    if (!audioUrl) return;
+    if (playbackAudioRef.current) {
+      playbackAudioRef.current.pause();
+      playbackAudioRef.current.currentTime = 0;
+    }
+    const audio = new Audio(audioUrl);
+    audio.playbackRate = rate;
+    playbackAudioRef.current = audio;
+    void audio.play();
+  }
+
+  function resetRecording() {
+    if (playbackAudioRef.current) {
+      playbackAudioRef.current.pause();
+      playbackAudioRef.current.currentTime = 0;
+      playbackAudioRef.current = null;
+    }
+    if (isRecording && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+    recordedBlobRef.current = null;
+    mediaChunksRef.current = [];
+    setIsRecording(false);
+    setAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const safeAnswer = answer.trim().slice(0, 800);
 
@@ -242,6 +350,17 @@ function ConversationContent() {
     const toneParam = scenario
       ? `&tone=${encodeURIComponent(selectedTone)}`
       : "";
+
+    if (recordedBlobRef.current) {
+      try {
+        const dataUrl = await blobToDataUrl(recordedBlobRef.current);
+        sessionStorage.setItem(VOICE_STORAGE_KEY, dataUrl);
+      } catch {
+        sessionStorage.removeItem(VOICE_STORAGE_KEY);
+      }
+    } else {
+      sessionStorage.removeItem(VOICE_STORAGE_KEY);
+    }
 
     router.push(
       `${base}&growth=${growthCount}&last=${encodeURIComponent(last)}&answer=${encodeURIComponent(safeAnswer)}${toneParam}`,
@@ -372,9 +491,55 @@ function ConversationContent() {
           className="w-full rounded-xl border border-neutral-700 bg-neutral-950/70 px-4 py-3 text-sm text-neutral-100 outline-none placeholder:text-neutral-500 focus:border-neutral-500"
         />
 
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void toggleVoiceRecording()}
+            className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+          >
+            {isRecording ? "🔴 Recording..." : "🎙️ Record your voice"}
+          </button>
+          {audioUrl ? (
+            <>
+              <button
+                type="button"
+                onClick={() => playYourRecording(1)}
+                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+              >
+                ▶️ Listen to yourself
+              </button>
+              <button
+                type="button"
+                onClick={resetRecording}
+                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+              >
+                🔁 Try again
+              </button>
+            </>
+          ) : null}
+        </div>
+
+        {audioUrl ? (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <p className="text-xs text-neutral-400">Listen for this</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-300">
+              <li>Stress: emphasize the key word</li>
+              <li>Ending sounds: do not drop final &quot;t&quot; or &quot;s&quot;</li>
+              <li>Flow: avoid stopping too often between words</li>
+            </ul>
+          </div>
+        ) : null}
+
+        {audioUrl ? (
+          <p className="text-xs text-neutral-400">
+            This is normal. Improvement starts when you hear the gap.
+          </p>
+        ) : null}
+
         <button
           type="submit"
-          className="w-fit rounded-lg border border-neutral-600 bg-neutral-100 px-5 py-2 text-sm font-medium text-neutral-950 hover:bg-neutral-200"
+          disabled={isRecording}
+          className="w-fit rounded-lg border border-neutral-600 bg-neutral-100 px-5 py-2 text-sm font-medium text-neutral-950 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Submit
         </button>

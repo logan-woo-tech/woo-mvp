@@ -1,12 +1,14 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, startTransition, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getWorkScenario,
   type WorkScenarioId,
   type WorkScenarioTone,
 } from "../../mocks/workScenarios";
+
+const VOICE_STORAGE_KEY = "woo_voice_practice_v1";
 
 const ACTIVITY_FEEDBACK: Record<string, string> = {
   "Inner Work":
@@ -289,6 +291,22 @@ function getStructureChecklist(
   return [];
 }
 
+function getWhyThisWorks(scenarioId?: string): string {
+  if (scenarioId === "delay-client") {
+    return "You moved from apology to clarity and control. This builds trust instead of uncertainty.";
+  }
+
+  if (scenarioId === "unhappy-customer") {
+    return "You acknowledged emotion first, which reduces tension. Then you moved to solution, which restores trust.";
+  }
+
+  if (scenarioId === "ask-more-time") {
+    return "You replaced a vague promise with a clear commitment. This makes your message more reliable.";
+  }
+
+  return "";
+}
+
 function getRiskyPhrases(
   answer: string,
   scenarioId?: string | null,
@@ -417,12 +435,12 @@ function buildScenarioBetterVersion(
   return "We are sharing a clear update and will keep you informed.";
 }
 
-function speakText(text: string) {
+function speakText(text: string, rate = 0.95) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
-  utterance.rate = 0.95;
+  utterance.rate = rate;
   window.speechSynthesis.speak(utterance);
 }
 
@@ -505,11 +523,25 @@ function FeedbackContent() {
         ? `${structureDoneCount} of ${structureTotalCount} parts are already strong.`
         : "";
   const riskyPhrases = getRiskyPhrases(answer, scenario?.id);
+  const whyThisWorks = getWhyThisWorks(scenario?.id);
 
   const betterVersion =
     isScenarioMode && scenario
       ? buildScenarioBetterVersion(scenario.id, tone)
       : "";
+
+  const [voiceRecordingUrl, setVoiceRecordingUrl] = useState<string | null>(
+    null,
+  );
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = sessionStorage.getItem(VOICE_STORAGE_KEY);
+    startTransition(() => {
+      setVoiceRecordingUrl(stored);
+    });
+  }, []);
 
   const reflectionSummary = answerAwareLines[0] ?? feedbackMessage;
 
@@ -563,6 +595,28 @@ function FeedbackContent() {
         ) : null}
 
         <p className="text-sm text-neutral-300">{practicalNextLine}</p>
+
+        {!isScenarioMode && voiceRecordingUrl ? (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <p className="text-xs text-neutral-400">Your recording</p>
+            <audio
+              ref={voiceAudioRef}
+              src={voiceRecordingUrl}
+              preload="auto"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => void voiceAudioRef.current?.play()}
+              className="mt-2 rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+            >
+              ▶️ Play
+            </button>
+            <p className="mt-2 text-xs text-neutral-400">
+              Notice how your version sounds compared with the better version.
+            </p>
+          </div>
+        ) : null}
 
         {isScenarioMode ? (
           <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
@@ -628,6 +682,29 @@ function FeedbackContent() {
               </div>
             ) : null}
 
+            {voiceRecordingUrl ? (
+              <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+                <p className="text-xs text-neutral-400">Your recording</p>
+                <audio
+                  ref={voiceAudioRef}
+                  src={voiceRecordingUrl}
+                  preload="auto"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => void voiceAudioRef.current?.play()}
+                  className="mt-2 rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                >
+                  ▶️ Play
+                </button>
+                <p className="mt-2 text-xs text-neutral-400">
+                  Notice how your version sounds compared with the better
+                  version.
+                </p>
+              </div>
+            ) : null}
+
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <p className="text-sm text-neutral-300 md:flex-1">
                 <span className="text-neutral-100">Better version:</span>{" "}
@@ -644,13 +721,31 @@ function FeedbackContent() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => speakText(betterVersion, 0.8)}
+                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                >
+                  🐢 Slow listen
+                </button>
+                <button
+                  type="button"
                   onClick={() => void copyText(betterVersion)}
                   className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
                 >
                   Copy better version
                 </button>
               </div>
+              <p className="text-xs text-neutral-400 md:basis-full">
+                Try the slow version first, then compare it with your own
+                recording.
+              </p>
             </div>
+
+            {isScenarioMode && whyThisWorks ? (
+              <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+                <p className="text-xs text-neutral-400">Why this works</p>
+                <p className="mt-1 text-sm text-neutral-300">{whyThisWorks}</p>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
