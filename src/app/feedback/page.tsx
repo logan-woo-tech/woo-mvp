@@ -60,6 +60,11 @@ const WORK_SCENARIO_META: Record<
     support: "Keep the tone calm, specific, and solution-oriented.",
     nextStepLabel: "Handle an unhappy customer",
   },
+  "unhappy-customer": {
+    intro: "You acknowledged the customer's frustration and responded professionally.",
+    support: "Lead with empathy, then move clearly to a solution.",
+    nextStepLabel: "Ask for more time professionally",
+  },
 };
 
 function getAnswerAwareFeedback(answer: string): string[] {
@@ -155,6 +160,18 @@ function buildScenarioBetterVersion(
   scenarioId: WorkScenarioId,
   tone: WorkScenarioTone,
 ): string {
+  if (scenarioId === "unhappy-customer") {
+    if (tone === "formal") {
+      return "I understand your concern and appreciate you bringing this up. This happened because of a delay in our process. We are resolving it now and will update you shortly.";
+    }
+
+    if (tone === "neutral") {
+      return "I understand the issue and why this is frustrating. This happened because of a delay on our side. We are fixing it now and will update you soon.";
+    }
+
+    return "I get why this is frustrating — this happened because we had a delay. We are fixing it now and will keep you posted.";
+  }
+
   if (scenarioId === "delay-client") {
     if (tone === "formal") {
       return "I’d like to update you that we are slightly behind schedule because we identified an issue during testing. To ensure quality, we are fixing it now and will provide an update shortly.";

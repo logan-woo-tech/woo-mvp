@@ -267,6 +267,19 @@ export default async function LearnerPage({ searchParams }: LearnerPageProps) {
               Use this before sending a real message.
             </span>
           </Link>
+
+          <Link
+            href={`/conversation?scenario=unhappy-customer&growth=${growthCount}`}
+            className="rounded-xl border border-amber-700/50 bg-amber-950/20 px-5 py-4 text-left text-sm text-amber-100 hover:bg-amber-900/30"
+          >
+            <span className="block font-medium">🧭 Handle an unhappy customer</span>
+            <span className="mt-1 block text-xs text-amber-200/80">
+              Respond calmly and resolve customer frustration.
+            </span>
+            <span className="mt-1 block text-xs text-amber-200/80">
+              Use this before replying to a real customer.
+            </span>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
