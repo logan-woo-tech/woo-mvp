@@ -194,6 +194,7 @@ function ConversationContent() {
     ? Math.max(0, growthSignal)
     : 0;
   const last = searchParams.get("last") ?? "";
+  const previousImprovement = searchParams.get("well") ?? "";
 
   const [selectedTone, setSelectedTone] = useState<WorkScenarioTone>("formal");
   const [answer, setAnswer] = useState("");
@@ -378,6 +379,14 @@ function ConversationContent() {
             ? `Scenario: ${activityIcon} ${scenario.title}`
             : `Current activity: ${activityIcon} ${activity}`}
         </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-xs text-neutral-400">Continuing your practice</p>
+          {previousImprovement ? (
+            <p className="text-xs text-neutral-400">
+              Last improvement: {previousImprovement}
+            </p>
+          ) : null}
+        </div>
 
         <p className="text-xs text-neutral-300">{framing}</p>
         <p className="text-xs text-neutral-400">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, startTransition, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getWorkScenario,
@@ -54,16 +54,19 @@ const WORK_SCENARIO_META: Record<
     intro: "You explained the delay clearly and kept the message professional.",
     support: "Keep the tone calm, specific, and solution-oriented.",
     nextStepLabel: "Handle an unhappy customer",
+    nextStepScenarioId: "unhappy-customer",
   },
   "unhappy-customer": {
     intro: "You acknowledged the customer's frustration and responded professionally.",
     support: "Lead with empathy, then move clearly to a solution.",
     nextStepLabel: "Ask for more time professionally",
+    nextStepScenarioId: "ask-more-time",
   },
   "ask-more-time": {
     intro: "You communicated the delay clearly without sounding uncertain.",
     support: "Be specific with your new deadline and show control of the situation.",
     nextStepLabel: "Explain a delay to a client",
+    nextStepScenarioId: "delay-client",
   },
 };
 
@@ -142,6 +145,22 @@ function getWhatToChange(
   }
 
   return "Tighten one phrase so your main point lands faster.";
+}
+
+function getStructureStarter(scenarioId?: WorkScenarioId | null): string {
+  if (scenarioId === "delay-client") {
+    return "Explain the reason first";
+  }
+
+  if (scenarioId === "unhappy-customer") {
+    return "Show empathy first";
+  }
+
+  if (scenarioId === "ask-more-time") {
+    return "Give a clear new deadline";
+  }
+
+  return "Start with one clear point";
 }
 
 type StructureItem = {
@@ -472,9 +491,10 @@ function FeedbackContent() {
       ? buildScenarioBetterVersion(scenario.id, tone)
       : "";
 
-  const [voiceRecordingUrl, setVoiceRecordingUrl] = useState<string | null>(
-    null,
-  );
+  const [voiceRecordingUrl] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem(VOICE_STORAGE_KEY);
+  });
   const [showRepeatPrompt, setShowRepeatPrompt] = useState(false);
   const [showCloserMessage, setShowCloserMessage] = useState(false);
   const [showStructureDetails, setShowStructureDetails] = useState(false);
@@ -484,14 +504,14 @@ function FeedbackContent() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = sessionStorage.getItem(VOICE_STORAGE_KEY);
-    startTransition(() => {
-      setVoiceRecordingUrl(stored);
-    });
     sessionStorage.removeItem(VOICE_STORAGE_KEY);
   }, []);
 
   const reflectionSummary = answerAwareLines[0] ?? feedbackMessage;
+  const nextScenario = scenarioMeta?.nextStepScenarioId
+    ? getWorkScenario(scenarioMeta.nextStepScenarioId)
+    : null;
+  const nextScenarioGoal = nextScenario?.focus ?? "";
   function handleBackToTree() {
     const nextGrowth = growthCount + 1;
 
@@ -520,7 +540,7 @@ function FeedbackContent() {
     const nextGrowth = growthCount + 1;
     if (isScenarioMode && scenarioMeta?.nextStepScenarioId) {
       router.push(
-        `/conversation?scenario=${encodeURIComponent(scenarioMeta.nextStepScenarioId)}&growth=${nextGrowth}`,
+        `/conversation?scenario=${encodeURIComponent(scenarioMeta.nextStepScenarioId)}&growth=${nextGrowth}&well=${encodeURIComponent(reflectionSummary)}`,
       );
       return;
     }
@@ -595,7 +615,9 @@ function FeedbackContent() {
                   What a strong reply needs
                 </p>
                 <p className="text-xs text-neutral-400">Start with one:</p>
-                <p className="text-xs text-neutral-400">Show empathy first</p>
+                <p className="text-xs text-neutral-400">
+                  {getStructureStarter(scenario?.id)}
+                </p>
                 <button
                   type="button"
                   onClick={() => setShowStructureDetails((prev) => !prev)}
@@ -694,13 +716,6 @@ function FeedbackContent() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => speakText(betterVersion)}
-                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
-                >
-                  🔊 Listen
-                </button>
-                <button
-                  type="button"
                   onClick={() => speakText(betterVersion, 0.8)}
                   className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
                 >
@@ -761,6 +776,13 @@ function FeedbackContent() {
         ) : null}
 
         <p className="text-sm text-neutral-300">{supportMessage}</p>
+        {nextScenario ? (
+          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+            <p className="text-xs text-neutral-400">Next challenge</p>
+            <p className="mt-1 text-sm text-neutral-200">🧭 {nextScenario.title}</p>
+            <p className="mt-1 text-xs text-neutral-400">{nextScenarioGoal}</p>
+          </div>
+        ) : null}
         <p className="text-xs text-neutral-400">
           Keep going — one more challenge will make this easier.
         </p>
