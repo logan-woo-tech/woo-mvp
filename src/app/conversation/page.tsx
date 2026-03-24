@@ -11,50 +11,50 @@ import { getQuickScenario } from "../../mocks/quickScenarios";
 
 const ACTIVITY_QUESTIONS: Record<string, string[]> = {
   "Inner Work": [
-    "What feeling is most present for you right now?",
-    "What feeling is most present, and what need is underneath it?",
-    "What recurring inner pattern do you notice, and what would a kinder response look like today?",
+    "Lúc này cảm xúc nào đang rõ nhất trong bạn?",
+    "Cảm xúc nào đang rõ nhất, và bên dưới nó là nhu cầu gì?",
+    "Bạn đang thấy mẫu cảm xúc nào lặp lại, và hôm nay bạn có thể phản hồi với chính mình dịu hơn thế nào?",
   ],
   Thinking: [
-    "What is one idea you want to examine today?",
-    "What is one idea you want to examine, and why do you think that?",
-    "What assumption might be shaping your thinking, and how would you test it with a real example?",
+    "Hôm nay bạn muốn làm rõ ý nào?",
+    "Bạn muốn làm rõ ý nào, và vì sao bạn nghĩ vậy?",
+    "Giả định nào đang chi phối cách bạn nghĩ, và bạn sẽ kiểm tra nó bằng ví dụ thực tế nào?",
   ],
   "Free Talk": [
-    "What is most on your mind right now?",
-    "What feels important to express right now, even if it is unfinished?",
-    "If you spoke with complete honesty, what truth would you want to hear yourself say today?",
+    "Lúc này điều gì đang ở trong đầu bạn nhiều nhất?",
+    "Điều gì quan trọng để nói ra lúc này, dù vẫn còn dang dở?",
+    "Nếu nói thật hoàn toàn, hôm nay bạn muốn nghe chính mình nói ra điều gì?",
   ],
   Mentor: [
-    "What is one goal you want to move forward today?",
-    "What is your next goal, what is one obstacle, and what first step will you take?",
-    "What strategic next step will create momentum this week, and how will you hold yourself accountable?",
+    "Hôm nay bạn muốn đẩy mục tiêu nào đi tiếp?",
+    "Mục tiêu tiếp theo là gì, trở ngại là gì, và bước đầu tiên bạn sẽ làm là gì?",
+    "Tuần này bước đi chiến lược nào sẽ tạo đà, và bạn sẽ tự cam kết ra sao?",
   ],
 };
 
 const ACTIVITY_FRAMING: Record<string, string> = {
-  "Inner Work": "Coach focus: slow down and listen inward.",
-  Thinking: "Coach focus: turn thoughts into clear reasoning.",
-  "Free Talk": "Coach focus: express freely without judgment.",
-  Mentor: "Coach focus: define a practical next step.",
+  "Inner Work": "Trọng tâm: chậm lại và lắng nghe bên trong.",
+  Thinking: "Trọng tâm: biến suy nghĩ thành lập luận rõ ràng.",
+  "Free Talk": "Trọng tâm: nói tự nhiên, không tự phán xét.",
+  Mentor: "Trọng tâm: chốt một bước đi thực tế.",
 };
 
 const ACTIVITY_SUPPORT_TEXT: Record<string, string> = {
   "Inner Work":
-    "Name one feeling honestly, then connect it to what you need right now.",
+    "Gọi tên một cảm xúc thật rõ, rồi nối nó với điều bạn đang cần.",
   Thinking:
-    "Pick one idea and test it with a clear reason and a concrete example.",
+    "Chọn một ý và kiểm tra bằng lý do rõ ràng cùng một ví dụ cụ thể.",
   "Free Talk":
-    "Let your first honest thoughts come out; clarity often follows expression.",
+    "Để những ý nghĩ thật nhất đi ra trước; khi nói ra rồi sẽ rõ hơn.",
   Mentor:
-    "Keep it actionable: goal, obstacle, and the next small move you can commit to.",
+    "Giữ mọi thứ có thể hành động: mục tiêu, trở ngại, và bước nhỏ bạn cam kết làm.",
 };
 
 const ACTIVITY_PLACEHOLDER: Record<string, string> = {
-  "Inner Work": "I notice I am feeling... and I think I need...",
-  Thinking: "My idea is... The reason is... One example is...",
-  "Free Talk": "Right now what feels most alive for me is...",
-  Mentor: "My goal is... My obstacle is... My first next step is...",
+  "Inner Work": "Mình đang thấy... và lúc này mình cần...",
+  Thinking: "Ý của mình là... Lý do là... Ví dụ là...",
+  "Free Talk": "Lúc này điều mình thấy rõ nhất là...",
+  Mentor: "Mục tiêu của mình là... Trở ngại là... Bước đầu tiên là...",
 };
 
 const ACTIVITY_ICON: Record<string, string> = {
@@ -71,11 +71,18 @@ const ACTIVITY_ACCENT: Record<string, string> = {
   Mentor: "text-amber-200",
 };
 
+const ACTIVITY_LABEL_VI: Record<string, string> = {
+  "Inner Work": "Hiểu mình",
+  Thinking: "Làm rõ ý",
+  "Free Talk": "Nói tự do",
+  Mentor: "Luyện cùng người hướng dẫn",
+};
+
 const ACTIVITY_HELPFUL_WORDS: Record<string, string[]> = {
-  "Inner Work": ["feeling", "need", "tension", "calm", "honest"],
-  Thinking: ["idea", "reason", "because", "for example", "result"],
-  "Free Talk": ["today", "stuck", "energy", "truth", "release"],
-  Mentor: ["goal", "obstacle", "step", "deadline", "commitment"],
+  "Inner Work": ["cảm xúc", "nhu cầu", "căng thẳng", "bình tĩnh", "thật lòng"],
+  Thinking: ["ý chính", "lý do", "because", "for example", "kết quả"],
+  "Free Talk": ["hôm nay", "mắc kẹt", "năng lượng", "điều thật", "thả lỏng"],
+  Mentor: ["mục tiêu", "trở ngại", "bước đi", "deadline", "cam kết"],
 };
 
 const ACTIVITY_SAMPLE_ANSWER: Record<string, string> = {
@@ -90,55 +97,112 @@ const ACTIVITY_SAMPLE_ANSWER: Record<string, string> = {
 };
 
 function getDifficultyLabel(growthCount: number) {
-  if (growthCount >= 4) return "Deep";
-  if (growthCount >= 2) return "Standard";
-  return "Simple";
+  if (growthCount >= 4) return "Sâu";
+  if (growthCount >= 2) return "Vừa";
+  return "Cơ bản";
 }
 
 function buildLiveHints(
   answer: string,
   scenarioId: string | null | undefined,
+  activity: string,
 ): string[] {
   const trimmed = answer.trim();
   const normalized = trimmed.toLowerCase();
   if (scenarioId === "delay-client") {
     const hints: string[] = [];
     if (!normalized.includes("because")) {
-      hints.push("Explain the reason clearly.");
+      hints.push("Nói rõ lý do.");
     }
     if (!normalized.includes("for example") && !normalized.includes("example")) {
-      hints.push("Add one concrete example.");
+      hints.push("Thêm một ví dụ cụ thể.");
     }
     return hints.slice(0, 2);
   }
 
   if (scenarioId === "unhappy-customer") {
     return [
-      "Acknowledge the customer's frustration first.",
-      "Then explain what you will do to fix it.",
+      "Thừa nhận cảm xúc của khách trước.",
+      "Sau đó nói rõ bạn sẽ xử lý thế nào.",
     ];
   }
 
   if (scenarioId === "ask-more-time") {
     return [
-      "Be clear about your new deadline.",
-      "Avoid vague phrases like 'as soon as possible'.",
+      "Nói rõ deadline mới.",
+      "Tránh nói mơ hồ kiểu 'sớm nhất có thể'.",
     ];
+  }
+
+  if (activity === "Thinking") {
+    const hints: string[] = [];
+    if (!normalized.includes("because")) {
+      hints.push('Thêm một câu "because..." để nói rõ lý do.');
+    }
+    if (!normalized.includes("for example") && !normalized.includes("example")) {
+      hints.push("Thêm một ví dụ cụ thể để ý của bạn chắc hơn.");
+    }
+    if (trimmed.length > 0 && trimmed.length < 40) {
+      hints.push("Nói rõ thêm một ý để lập luận đầy hơn.");
+    }
+    return hints.slice(0, 2);
+  }
+
+  if (activity === "Free Talk") {
+    const hints: string[] = [];
+    if (trimmed.length > 0 && trimmed.length < 40) {
+      hints.push("Nói rõ hơn một ý mà bạn thấy quan trọng nhất lúc này.");
+    }
+    if (!normalized.includes("hôm nay") && !normalized.includes("lúc này")) {
+      hints.push("Thêm một chi tiết thật để câu nói tự nhiên hơn.");
+    }
+    return hints.slice(0, 2);
+  }
+
+  if (activity === "Inner Work") {
+    const hints: string[] = [];
+    const hasEmotionWord =
+      normalized.includes("cảm") ||
+      normalized.includes("lo") ||
+      normalized.includes("buồn") ||
+      normalized.includes("vui") ||
+      normalized.includes("căng");
+    if (!hasEmotionWord) {
+      hints.push("Gọi tên cảm xúc chính của bạn trước.");
+    }
+    if (!normalized.includes("cần")) {
+      hints.push("Thêm một câu về điều bạn đang cần lúc này.");
+    }
+    return hints.slice(0, 2);
+  }
+
+  if (activity === "Mentor") {
+    const hints: string[] = [];
+    if (!normalized.includes("mục tiêu") && !normalized.includes("goal")) {
+      hints.push("Nói rõ mục tiêu bạn muốn đạt.");
+    }
+    if (!normalized.includes("trở ngại") && !normalized.includes("obstacle")) {
+      hints.push("Nêu một trở ngại cụ thể đang chặn bạn.");
+    }
+    if (!normalized.includes("bước") && !normalized.includes("next")) {
+      hints.push("Chốt một bước tiếp theo bạn sẽ làm ngay.");
+    }
+    return hints.slice(0, 2);
   }
 
   const hints: string[] = [];
   if (trimmed.length > 0 && trimmed.length < 30) {
-    hints.push("Add one more detail.");
+    hints.push("Thêm một chi tiết nữa.");
   }
   if (!normalized.includes("because")) {
-    hints.push('Add "because..." to explain your reason.');
+    hints.push('Thêm "because..." để nói rõ lý do.');
   }
   if (
     normalized.includes("because") &&
     !normalized.includes("for example") &&
     !normalized.includes("example")
   ) {
-    hints.push("Good — now add one example.");
+    hints.push("Ổn rồi — thêm một ví dụ nữa.");
   }
   return hints.slice(0, 2);
 }
@@ -203,6 +267,11 @@ function ConversationContent() {
   const previousImprovement = searchParams.get("well") ?? "";
 
   const [selectedTone, setSelectedTone] = useState<WorkScenarioTone>("formal");
+  const toneLabel: Record<WorkScenarioTone, string> = {
+    formal: "Trang trọng",
+    neutral: "Trung tính",
+    friendly: "Thân thiện",
+  };
   const [answer, setAnswer] = useState("");
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -210,7 +279,7 @@ function ConversationContent() {
 
   const fallbackQuestion =
     mockConversation.find((message) => message.role === "coach")?.text ??
-    "How are you feeling right now?";
+    "Lúc này bạn đang thấy thế nào?";
 
   const questionLevel = growthCount >= 4 ? 2 : growthCount >= 2 ? 1 : 0;
   const activityQuestionSet = ACTIVITY_QUESTIONS[activity];
@@ -220,20 +289,25 @@ function ConversationContent() {
     fallbackQuestion;
 
   const framing = scenario
-    ? `Coach focus: ${scenario.focus}`
+    ? `Trọng tâm: ${scenario.focus}`
     : (ACTIVITY_FRAMING[activity] ??
-      "Coach focus: speak with honesty and intention.");
+      "Trọng tâm: nói thật, nói rõ điều mình muốn.");
 
   const supportText = scenario
     ? scenario.context
     : (ACTIVITY_SUPPORT_TEXT[activity] ??
-      "Take a breath, then share: what happened, why it mattered, and one real example.");
+      "Hít thở một nhịp, rồi nói: chuyện gì đã xảy ra, vì sao quan trọng, và một ví dụ thật.");
 
   const placeholder = scenario
-    ? "Write your response in a professional way..."
-    : (ACTIVITY_PLACEHOLDER[activity] ?? "Write your answer here...");
+    ? scenario.id === "delay-client"
+      ? "Viết một tin nhắn ngắn, rõ và vẫn giữ được uy tín..."
+      : scenario.id === "unhappy-customer"
+        ? "Viết một phản hồi bình tĩnh, thấu cảm và có hướng xử lý..."
+        : "Viết một lời xin thêm thời gian rõ ràng và chắc chắn..."
+    : (ACTIVITY_PLACEHOLDER[activity] ?? "Viết câu trả lời của bạn...");
 
   const activityIcon = scenario ? "🧭" : (ACTIVITY_ICON[activity] ?? "✨");
+  const activityLabelVi = ACTIVITY_LABEL_VI[activity] ?? "Bài luyện";
   const activityAccent = scenario
     ? "text-amber-200"
     : (ACTIVITY_ACCENT[activity] ?? "text-neutral-300");
@@ -241,28 +315,28 @@ function ConversationContent() {
   const helpfulWords = scenario
     ? scenario.helpfulWords
     : (ACTIVITY_HELPFUL_WORDS[activity] ?? [
-        "clear",
+        "rõ ý",
         "because",
         "for example",
-        "next step",
+        "bước tiếp theo",
       ]);
 
   const starterSentences = scenario
     ? scenario.starterSentences
-    : ["My idea is...", "I think this because...", "For example..."];
+    : ["Ý của mình là...", "Mình nghĩ vậy vì...", "Ví dụ là..."];
 
   const sampleAnswer = scenario
     ? scenario.sampleAnswer
     : (ACTIVITY_SAMPLE_ANSWER[activity] ??
-      "I want to improve this area because it matters to me. For example, I can take one small step today.");
+      "Mình muốn cải thiện phần này vì nó quan trọng với mình. Ví dụ, hôm nay mình có thể làm một bước nhỏ.");
 
   const mainQuestion = isQuickMode
-    ? (quickScenario?.prompt ?? "Give a clear response in 1-2 sentences.")
+    ? (quickScenario?.prompt ?? "Trả lời rõ trong 1-2 câu.")
     : scenario
       ? scenario.question
       : activityQuestion;
   const difficultyLabel = getDifficultyLabel(growthCount);
-  const liveHints = buildLiveHints(answer, scenarioId);
+  const liveHints = buildLiveHints(answer, scenarioId, activity);
 
   function insertText(text: string) {
     setAnswer(text);
@@ -380,28 +454,30 @@ function ConversationContent() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-10">
+    <main className="relative min-h-screen overflow-hidden bg-[#070b1d] px-4 py-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.18),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.08),transparent_2%),radial-gradient(circle_at_75%_25%,rgba(255,255,255,0.06),transparent_2%),radial-gradient(circle_at_55%_70%,rgba(255,255,255,0.05),transparent_2%)]" />
       <form
         onSubmit={handleSubmit}
-        className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-6"
+        className="relative mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] p-6 backdrop-blur-md shadow-[0_12px_36px_rgba(4,10,30,0.35)]"
       >
         <p className={`text-xs ${activityAccent}`}>
           {scenario
-            ? `Scenario: ${activityIcon} ${scenario.title}`
-            : `Current activity: ${activityIcon} ${activity}`}
+            ? `Tình huống: ${activityIcon} ${scenario.title}`
+            : `Bài luyện hiện tại: ${activityIcon} ${activityLabelVi}`}
         </p>
         <div className="flex flex-col gap-1">
-          <p className="text-xs text-neutral-400">Continuing your practice</p>
+          <p className="text-xs text-neutral-300">Tiếp tục nhé — bạn đang làm rất tốt</p>
           {previousImprovement ? (
             <p className="text-xs text-neutral-400">
-              Last improvement: {previousImprovement}
+              Tiến bộ gần nhất: {previousImprovement}
             </p>
           ) : null}
         </div>
 
         {isQuickMode ? (
           <>
-            <p className="text-xs text-neutral-400">Situation</p>
+            <p className="text-xs text-neutral-400">Tình huống</p>
             <p className="text-sm text-neutral-300">
               {quickScenario?.situation ?? supportText}
             </p>
@@ -411,7 +487,7 @@ function ConversationContent() {
           <>
             <p className="text-xs text-neutral-300">{framing}</p>
             <p className="text-xs text-neutral-400">
-              Difficulty: {difficultyLabel}
+              Mức độ: {difficultyLabel}
             </p>
             <h1 className="text-lg text-neutral-100">{mainQuestion}</h1>
             <p className="text-sm text-neutral-300">{supportText}</p>
@@ -419,9 +495,9 @@ function ConversationContent() {
         )}
 
         {!isQuickMode && scenario ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
             <p className="text-xs text-neutral-400">
-              Choose how you want to sound
+              Chọn cách bạn muốn thể hiện
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {(["formal", "neutral", "friendly"] as WorkScenarioTone[]).map(
@@ -433,28 +509,28 @@ function ConversationContent() {
                       setSelectedTone(tone);
                       insertText(scenario.toneStarters[tone]);
                     }}
-                    className={`rounded-lg border px-3 py-2 text-sm hover:bg-neutral-800/70 ${
+                    className={`rounded-xl border px-3 py-2 text-sm backdrop-blur-sm transition ${
                       selectedTone === tone
-                        ? "border-amber-600 bg-amber-950/30 text-amber-100"
-                        : "border-neutral-700 bg-neutral-900/50 text-neutral-200"
+                        ? "border-amber-300/40 bg-[rgba(244,197,66,0.15)] text-amber-100"
+                        : "border-white/10 bg-white/5 text-white/90 hover:bg-white/10"
                     }`}
                   >
-                    {tone.charAt(0).toUpperCase() + tone.slice(1)}
+                    {toneLabel[tone]}
                   </button>
                 ),
               )}
             </div>
           </div>
         ) : !isQuickMode ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-            <p className="text-xs text-neutral-400">You can start like this</p>
+          <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
+            <p className="text-xs text-neutral-400">Bạn có thể bắt đầu như sau</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {starterSentences.map((starter) => (
                 <button
                   key={starter}
                   type="button"
                   onClick={() => insertText(starter)}
-                  className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                 >
                   {starter}
                 </button>
@@ -464,8 +540,8 @@ function ConversationContent() {
         ) : null}
 
         {!isQuickMode ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-          <p className="text-xs text-neutral-400">Helpful words</p>
+          <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
+          <p className="text-xs text-neutral-400">Từ gợi ý</p>
           <p className="mt-1 text-sm text-neutral-300">
             {helpfulWords.join(" • ")}
           </p>
@@ -476,22 +552,22 @@ function ConversationContent() {
           <button
           type="button"
           onClick={() => setShowSampleAnswer((prev) => !prev)}
-          className="w-fit rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+          className="w-fit rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 backdrop-blur-sm transition hover:bg-white/10"
         >
-          {showSampleAnswer ? "Hide simple answer" : "Show me a simple answer"}
+          {showSampleAnswer ? "Ẩn câu mẫu" : "Xem câu mẫu"}
           </button>
         ) : null}
 
         {!isQuickMode && showSampleAnswer ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-neutral-400">Simple answer</p>
+              <p className="text-xs text-neutral-400">Câu mẫu</p>
               <button
                 type="button"
                 onClick={() => speakText(sampleAnswer)}
-                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-1.5 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
               >
-                🔊 Listen
+                🔊 Nghe
               </button>
             </div>
             <p className="mt-2 text-sm text-neutral-300">{sampleAnswer}</p>
@@ -499,9 +575,9 @@ function ConversationContent() {
         ) : null}
 
         {!isQuickMode ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
           <p className="text-xs text-neutral-400">
-            Take your time. You can start with one word.
+            Cứ bình tĩnh. Bạn có thể bắt đầu bằng một từ.
           </p>
           <div className="mt-2 flex flex-col gap-1">
             {liveHints.map((hint) => (
@@ -510,13 +586,13 @@ function ConversationContent() {
               </p>
             ))}
             {answer.trim().length >= 80 ? (
-              <p className="text-sm text-emerald-200">Good — keep going.</p>
+              <p className="text-sm text-emerald-200">Ổn rồi — nói tiếp đi.</p>
             ) : null}
           </div>
           </div>
         ) : null}
 
-        <p className="text-xs text-neutral-400">Your answer</p>
+        <p className="text-xs text-neutral-400">Câu trả lời của bạn</p>
 
         <textarea
           ref={textareaRef}
@@ -525,66 +601,66 @@ function ConversationContent() {
           onChange={(event) => setAnswer(event.target.value)}
           rows={isQuickMode ? 3 : 6}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-neutral-700 bg-neutral-950/70 px-4 py-3 text-sm text-neutral-100 outline-none placeholder:text-neutral-500 focus:border-neutral-500"
+          className="w-full rounded-2xl border border-white/15 bg-[rgba(40,56,116,0.5)] px-5 py-3.5 text-sm text-neutral-100 outline-none placeholder:text-neutral-400 shadow-inner shadow-black/20 focus:border-[#F4C542]/85 focus:ring-2 focus:ring-[#F4C542]/30 focus:shadow-[0_0_22px_rgba(244,197,66,0.16)]"
         />
 
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => void toggleVoiceRecording()}
-            className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 backdrop-blur-sm transition hover:bg-white/10"
           >
-            {isRecording ? "🔴 Recording..." : "🎙️ Record your voice"}
+            {isRecording ? "🔴 Đang thu âm..." : "🎙️ Thu âm giọng của bạn"}
           </button>
           {audioUrl ? (
             <>
               <button
                 type="button"
                 onClick={() => playYourRecording(1)}
-                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 backdrop-blur-sm transition hover:bg-white/10"
               >
-                ▶️ Listen to yourself
+                ▶️ Nghe lại giọng của bạn
               </button>
               <button
                 type="button"
                 onClick={resetRecording}
-                className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/70"
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 backdrop-blur-sm transition hover:bg-white/10"
               >
-                🔁 Try again
+                🔁 Làm lại
               </button>
             </>
           ) : null}
         </div>
 
         {!isQuickMode && audioUrl ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-            <p className="text-xs text-neutral-400">Listen for this</p>
+          <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
+            <p className="text-xs text-neutral-400">Nghe và chú ý</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-300">
-              <li>Stress: emphasize the key word</li>
-              <li>Ending sounds: do not drop final &quot;t&quot; or &quot;s&quot;</li>
-              <li>Flow: avoid stopping too often between words</li>
+              <li>Nhấn trọng âm: nhấn vào từ khóa.</li>
+              <li>Âm cuối: đừng nuốt âm &quot;t&quot; hoặc &quot;s&quot;.</li>
+              <li>Độ mượt: hạn chế ngắt quá nhiều giữa các từ.</li>
             </ul>
           </div>
         ) : null}
 
         {!isQuickMode && audioUrl ? (
           <p className="text-xs text-neutral-400">
-            This is normal. Improvement starts when you hear the gap.
+            Điều này rất bình thường. Tiến bộ bắt đầu khi bạn nghe ra khoảng cách.
           </p>
         ) : null}
 
         {!isQuickMode && audioUrl ? (
           <p className="text-xs text-neutral-400">
-            Say it again — this time more clearly.
+            Nói lại lần nữa — lần này rõ hơn.
           </p>
         ) : null}
 
         <button
           type="submit"
           disabled={isRecording}
-          className="w-fit rounded-lg border border-neutral-600 bg-neutral-100 px-5 py-2 text-sm font-medium text-neutral-950 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-fit rounded-xl bg-[#F4C542] px-5 py-2 text-sm font-semibold text-[#1B1B1B] shadow-[0_0_20px_rgba(244,197,66,0.18)] transition hover:bg-[#FFD45A] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Submit
+          Gửi
         </button>
       </form>
     </main>

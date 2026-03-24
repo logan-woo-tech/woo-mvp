@@ -21,13 +21,13 @@ export type WorkScenario = {
 export const WORK_SCENARIOS: Record<WorkScenarioId, WorkScenario> = {
   "delay-client": {
     id: "delay-client",
-    title: "Explain a delay to a client",
-    shortLabel: "Explain a delay",
-    description: "Communicate delays clearly without losing trust.",
-    focus: "Be clear, take responsibility, and propose a solution.",
+    title: "Báo trễ deadline mà vẫn giữ uy tín",
+    shortLabel: "Báo trễ deadline",
+    description: "Báo trễ rõ ràng nhưng vẫn giữ được niềm tin.",
+    focus: "Nói rõ lý do, chủ động xử lý, và chốt hướng giải quyết.",
     context:
-      "You promised a deadline, but your team is behind. You need to inform the client without losing trust.",
-    question: "How would you explain the delay and keep the client's trust?",
+      "Bạn đã hứa deadline nhưng đội đang bị trễ. Bạn cần báo cho khách mà không làm mất niềm tin.",
+    question: "Bạn sẽ báo trễ như thế nào để khách vẫn tin tưởng?",
     toneStarters: {
       formal: "I’d like to update you on the timeline...",
       neutral: "We are slightly behind schedule because...",
@@ -52,14 +52,14 @@ export const WORK_SCENARIOS: Record<WorkScenarioId, WorkScenario> = {
   },
   "unhappy-customer": {
     id: "unhappy-customer",
-    title: "Handle an unhappy customer",
-    shortLabel: "Handle an unhappy customer",
-    description: "Respond calmly and resolve customer frustration.",
-    focus: "Acknowledge emotion, take responsibility, and move to solution.",
+    title: "Trả lời khách đang bực mà không làm căng hơn",
+    shortLabel: "Khách đang bực",
+    description: "Phản hồi bình tĩnh và kéo cuộc nói chuyện về hướng giải quyết.",
+    focus: "Thừa nhận cảm xúc, chủ động xử lý, rồi chốt cách giải quyết.",
     context:
-      "A customer is unhappy about your service or delay. You need to respond without making the situation worse.",
+      "Khách hàng đang khó chịu vì dịch vụ hoặc vì bị trễ. Bạn cần trả lời mà không làm tình hình căng hơn.",
     question:
-      "How would you respond to calm the customer and move toward a solution?",
+      "Bạn sẽ trả lời thế nào để hạ nhiệt và đưa cuộc nói chuyện về hướng giải quyết?",
     toneStarters: {
       formal: "I understand your concern and appreciate you bringing this up...",
       neutral: "I understand the issue and we are looking into it...",
@@ -84,13 +84,13 @@ export const WORK_SCENARIOS: Record<WorkScenarioId, WorkScenario> = {
   },
   "ask-more-time": {
     id: "ask-more-time",
-    title: "Ask for more time professionally",
-    shortLabel: "Ask for more time",
-    description: "Request more time without sounding weak or unclear.",
-    focus: "Be honest, give a reason, and propose a clear new deadline.",
+    title: "Xin thêm thời gian mà vẫn giữ được sự tin tưởng",
+    shortLabel: "Xin thêm thời gian",
+    description: "Xin thêm thời gian rõ ràng, không để người nghe thấy thiếu tự tin.",
+    focus: "Nói thẳng lý do, giữ giọng chắc chắn, và chốt deadline mới rõ ràng.",
     context:
-      "You cannot meet the original deadline and need to ask for more time while maintaining trust.",
-    question: "How would you ask for more time clearly and professionally?",
+      "Bạn không kịp deadline ban đầu và cần xin thêm thời gian nhưng vẫn phải giữ sự tin tưởng.",
+    question: "Bạn sẽ xin thêm thời gian thế nào để vẫn chuyên nghiệp và đáng tin?",
     toneStarters: {
       formal: "I would like to request a slight extension on the deadline...",
       neutral: "I need a bit more time to complete this...",

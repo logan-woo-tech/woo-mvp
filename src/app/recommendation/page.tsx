@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function RecommendationPage() {
-  return <main>Recommendation placeholder</main>;
+  redirect("/learner");
 }

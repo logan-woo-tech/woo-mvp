@@ -13,19 +13,19 @@ const VOICE_STORAGE_KEY = "woo_voice_practice_v1";
 
 const ACTIVITY_FEEDBACK: Record<string, string> = {
   "Inner Work":
-    "You met yourself gently and told the truth about what you feel.",
-  Thinking: "You organized your thought clearly and supported it with reason.",
+    "Bạn đã chạm vào cảm xúc thật và nói ra điều mình đang thấy.",
+  Thinking: "Bạn đã sắp xếp ý rõ và có lý do đi kèm.",
   "Free Talk":
-    "You let your voice move freely, and that openness created breathing room.",
+    "Bạn đã nói tự nhiên hơn và thoải mái hơn.",
   Mentor:
-    "You chose direction with confidence and defined a concrete next move.",
+    "Bạn đã chọn hướng đi rõ và chốt được bước tiếp theo.",
 };
 
 const ACTIVITY_SUPPORT: Record<string, string> = {
-  "Inner Work": "Hold this warmth as you take your next step.",
-  Thinking: "Keep this structure - it will make your next decisions easier.",
-  "Free Talk": "Stay open; your clarity will keep unfolding.",
-  Mentor: "Now follow through with steady action.",
+  "Inner Work": "Giữ sự mềm mại này khi bạn đi tiếp.",
+  Thinking: "Giữ cấu trúc này để quyết định sau dễ hơn.",
+  "Free Talk": "Cứ mở lòng, càng nói càng rõ.",
+  Mentor: "Giờ thì đi tiếp bằng hành động cụ thể.",
 };
 
 const ACTIVITY_ICON: Record<string, string> = {
@@ -42,6 +42,13 @@ const ACTIVITY_ACCENT: Record<string, string> = {
   Mentor: "text-amber-200",
 };
 
+const ACTIVITY_LABEL_VI: Record<string, string> = {
+  "Inner Work": "Hiểu mình",
+  Thinking: "Làm rõ ý",
+  "Free Talk": "Nói tự do",
+  Mentor: "Luyện cùng người hướng dẫn",
+};
+
 const WORK_SCENARIO_META: Record<
   WorkScenarioId,
   {
@@ -52,21 +59,21 @@ const WORK_SCENARIO_META: Record<
   }
 > = {
   "delay-client": {
-    intro: "You explained the delay clearly and kept the message professional.",
-    support: "Keep the tone calm, specific, and solution-oriented.",
-    nextStepLabel: "Handle an unhappy customer",
+    intro: "Bạn đã báo trễ rõ ràng mà vẫn giữ sự chuyên nghiệp.",
+    support: "Giữ giọng bình tĩnh, nói cụ thể, và hướng vào giải pháp.",
+    nextStepLabel: "Trả lời khách đang bực",
     nextStepScenarioId: "unhappy-customer",
   },
   "unhappy-customer": {
-    intro: "You acknowledged the customer's frustration and responded professionally.",
-    support: "Lead with empathy, then move clearly to a solution.",
-    nextStepLabel: "Ask for more time professionally",
+    intro: "Bạn đã thừa nhận cảm xúc của khách và phản hồi chuyên nghiệp.",
+    support: "Bắt đầu bằng sự thấu cảm, rồi chuyển rõ sang hướng xử lý.",
+    nextStepLabel: "Xin thêm thời gian",
     nextStepScenarioId: "ask-more-time",
   },
   "ask-more-time": {
-    intro: "You communicated the delay clearly without sounding uncertain.",
-    support: "Be specific with your new deadline and show control of the situation.",
-    nextStepLabel: "Explain a delay to a client",
+    intro: "Bạn đã xin thêm thời gian rõ ràng mà không bị thiếu tự tin.",
+    support: "Nói cụ thể deadline mới để thể hiện bạn đang kiểm soát tình huống.",
+    nextStepLabel: "Báo trễ deadline",
     nextStepScenarioId: "delay-client",
   },
 };
@@ -77,19 +84,19 @@ function getAnswerAwareFeedback(answer: string): string[] {
   const lines: string[] = [];
 
   if (trimmed.length >= 120) {
-    lines.push("You stayed with your idea and gave it more depth.");
+    lines.push("Bạn đã đi sâu vào ý chính, không dừng quá sớm.");
   }
 
   if (normalized.includes("because")) {
-    lines.push("Strong reasoning - you explained your why clearly.");
+    lines.push("Lý do bạn đưa ra khá rõ và thuyết phục.");
   }
 
   if (normalized.includes("for example") || normalized.includes("example")) {
-    lines.push("Your example makes your point easier to trust.");
+    lines.push("Ví dụ của bạn giúp ý này đáng tin hơn.");
   }
 
   if (lines.length === 0 && trimmed.length > 0) {
-    lines.push("Clear starting point - now make it a little more concrete.");
+    lines.push("Khởi đầu ổn rồi, giờ thêm một chi tiết cụ thể nữa là đẹp.");
   }
 
   return lines.slice(0, 2);
@@ -100,18 +107,18 @@ function getPracticalNextLine(answer: string): string {
   const normalized = trimmed.toLowerCase();
 
   if (!normalized.includes("because")) {
-    return 'Try this next time: add one "because" sentence to explain your reason.';
+    return 'Lần sau thử thêm một câu "because" để chốt lý do rõ hơn.';
   }
 
   if (!normalized.includes("for example") && !normalized.includes("example")) {
-    return "Try this next time: add one real example to increase trust.";
+    return "Lần sau thử thêm một ví dụ thật để câu trả lời thuyết phục hơn.";
   }
 
   if (trimmed.length > 0 && trimmed.length < 100) {
-    return "Try this next time: stay with your answer a little longer and add one more detail.";
+    return "Lần sau nói dài hơn một chút và thêm một chi tiết nữa.";
   }
 
-  return "Try this next time: replace a general word with a more precise professional phrase.";
+  return "Lần sau thay một cụm chung chung bằng cách nói cụ thể hơn.";
 }
 
 function getWhatToChange(
@@ -119,49 +126,49 @@ function getWhatToChange(
   scenarioId?: WorkScenarioId | null,
 ): string {
   if (scenarioId === "delay-client") {
-    return "Make your new timeline more specific.";
+    return "Nói deadline mới cụ thể hơn.";
   }
 
   if (scenarioId === "unhappy-customer") {
-    return "Focus more on empathy before explaining the issue.";
+    return "Thể hiện sự thấu cảm trước khi giải thích vấn đề.";
   }
 
   if (scenarioId === "ask-more-time") {
-    return "Make your deadline more precise and confident.";
+    return "Nói deadline rõ và chắc hơn.";
   }
 
   const trimmed = answer.trim();
   const normalized = trimmed.toLowerCase();
 
   if (!normalized.includes("because")) {
-    return 'Add one clear reason with "because".';
+    return 'Thêm một lý do rõ ràng bằng "because".';
   }
 
   if (!normalized.includes("for example") && !normalized.includes("example")) {
-    return "Add one short example to increase credibility.";
+    return "Thêm một ví dụ ngắn để tăng độ tin cậy.";
   }
 
   if (trimmed.length > 0 && trimmed.length < 100) {
-    return "Add one more sentence so the client understands both the issue and the next step.";
+    return "Thêm một câu để khách hiểu cả vấn đề lẫn bước tiếp theo.";
   }
 
-  return "Tighten one phrase so your main point lands faster.";
+  return "Gọt một câu cho gọn để ý chính vào nhanh hơn.";
 }
 
 function getStructureStarter(scenarioId?: WorkScenarioId | null): string {
   if (scenarioId === "delay-client") {
-    return "Explain the reason first";
+    return "Nêu lý do trước";
   }
 
   if (scenarioId === "unhappy-customer") {
-    return "Show empathy first";
+    return "Thấu cảm trước";
   }
 
   if (scenarioId === "ask-more-time") {
-    return "Give a clear new deadline";
+    return "Nói deadline mới rõ ràng";
   }
 
-  return "Start with one clear point";
+  return "Bắt đầu bằng một ý thật rõ";
 }
 
 type StructureItem = {
@@ -182,18 +189,26 @@ function getStructureChecklist(
     normalized.includes("tomorrow");
 
   if (scenarioId === "delay-client") {
+    const acknowledgeIssue =
+      normalized.includes("delay") ||
+      normalized.includes("late") ||
+      normalized.includes("trễ") ||
+      normalized.includes("chậm");
     return [
-      { label: "Acknowledge the issue", status: "done" },
       {
-        label: "Explain the reason",
+        label: "Thừa nhận vấn đề",
+        status: acknowledgeIssue ? "done" : "missing",
+      },
+      {
+        label: "Giải thích lý do",
         status: normalized.includes("because") ? "done" : "missing",
       },
       {
-        label: "Give a clear timeline",
+        label: "Nêu timeline cụ thể",
         status: hasTimelineHint ? "done" : "missing",
       },
       {
-        label: "Reassure the client",
+        label: "Trấn an khách hàng",
         status:
           normalized.includes("update") ||
           normalized.includes("fix") ||
@@ -207,7 +222,7 @@ function getStructureChecklist(
   if (scenarioId === "unhappy-customer") {
     return [
       {
-        label: "Show empathy",
+        label: "Thể hiện thấu cảm",
         status:
           normalized.includes("understand") ||
           normalized.includes("sorry") ||
@@ -216,18 +231,18 @@ function getStructureChecklist(
             : "missing",
       },
       {
-        label: "Take responsibility",
+        label: "Thể hiện là mình đang chủ động xử lý",
         status: normalized.includes("we") ? "done" : "missing",
       },
       {
-        label: "Offer a solution",
+        label: "Đưa ra hướng xử lý",
         status:
           normalized.includes("fix") || normalized.includes("resolve")
             ? "done"
             : "missing",
       },
       {
-        label: "Give a follow-up",
+        label: "Cho biết bước tiếp theo là gì",
         status:
           normalized.includes("update") || normalized.includes("soon")
             ? "done"
@@ -237,23 +252,32 @@ function getStructureChecklist(
   }
 
   if (scenarioId === "ask-more-time") {
+    const hasContextHint =
+      normalized.includes("deadline") ||
+      normalized.includes("time") ||
+      normalized.includes("timeline") ||
+      normalized.includes("thời gian") ||
+      normalized.includes("tiến độ");
     const weakConfidence =
       /\bmaybe\b/.test(normalized) ||
       /\btry\b/.test(normalized) ||
       /\bhopefully\b/.test(normalized);
 
     return [
-      { label: "Set the context", status: "done" },
       {
-        label: "Explain why",
+        label: "Nói bối cảnh ngắn gọn",
+        status: hasContextHint ? "done" : "missing",
+      },
+      {
+        label: "Nói rõ lý do",
         status: normalized.includes("because") ? "done" : "missing",
       },
       {
-        label: "Give a specific deadline",
+        label: "Nêu deadline cụ thể",
         status: hasTimelineHint ? "done" : "missing",
       },
       {
-        label: "Sound confident",
+        label: "Giữ giọng chắc chắn",
         status: weakConfidence ? "missing" : "done",
       },
     ];
@@ -264,15 +288,15 @@ function getStructureChecklist(
 
 function getWhyThisWorks(scenarioId?: string): string {
   if (scenarioId === "delay-client") {
-    return "You moved from apology to clarity and control. This builds trust instead of uncertainty.";
+    return "Bạn chuyển từ xin lỗi sang nói rõ và chủ động xử lý. Cách này tạo niềm tin tốt hơn.";
   }
 
   if (scenarioId === "unhappy-customer") {
-    return "You acknowledged emotion first, which reduces tension. Then you moved to solution, which restores trust.";
+    return "Bạn thừa nhận cảm xúc trước nên hạ nhiệt tốt. Sau đó chuyển sang hướng xử lý nên dễ lấy lại niềm tin.";
   }
 
   if (scenarioId === "ask-more-time") {
-    return "You replaced a vague promise with a clear commitment. This makes your message more reliable.";
+    return "Bạn đổi lời hứa mơ hồ thành cam kết rõ ràng. Tin nhắn vì vậy đáng tin hơn.";
   }
 
   return "";
@@ -296,48 +320,68 @@ function getRiskyPhrases(
   const generalRules = [
     {
       phrase: "as soon as possible",
-      why: "This sounds vague and does not create confidence.",
-      better: "Use a specific deadline like 'by tomorrow at 4 PM'.",
+      why: "Cụm này khá mơ hồ, nghe chưa đủ chắc chắn.",
+      better: "Nên chốt thời gian cụ thể, ví dụ: 'by tomorrow at 4 PM'.",
+    },
+    {
+      phrase: "sớm nhất có thể",
+      why: "Cụm này khá chung chung, chưa tạo cảm giác chắc chắn.",
+      better: "Nên chốt mốc thời gian cụ thể bạn sẽ gửi/cập nhật.",
     },
     {
       phrase: "try my best",
-      why: "This sounds weak and uncertain.",
+      why: "Cách nói này dễ tạo cảm giác thiếu chắc chắn.",
       better:
-        "Use a clear commitment like 'I will send the updated version by...'.",
+        "Nên nói theo cam kết rõ, ví dụ: 'I will send the updated version by...'.",
+    },
+    {
+      phrase: "em sẽ cố gắng",
+      why: "Cách nói này dễ bị hiểu là chưa có cam kết rõ.",
+      better: "Đổi sang câu có mốc thời gian cụ thể và hành động rõ ràng.",
     },
     {
       phrase: "maybe",
-      why: "This can make your message sound unsure.",
-      better: "Use a more confident phrase with a clear next step.",
+      why: "Từ này làm câu trả lời nghe thiếu tự tin.",
+      better: "Đổi sang cách nói chắc hơn và có bước tiếp theo rõ ràng.",
+    },
+    {
+      phrase: "chắc là",
+      why: "Cụm này làm thông điệp nghe thiếu chắc chắn.",
+      better: "Nói thẳng phương án và mốc thời gian cụ thể.",
     },
     {
       phrase: "hopefully",
-      why: "This can sound passive in professional updates.",
-      better: "State what you will do and when.",
+      why: "Trong cập nhật công việc, cụm này nghe khá bị động.",
+      better: "Nói rõ bạn sẽ làm gì và làm khi nào.",
+    },
+    {
+      phrase: "hy vọng",
+      why: "Nếu đứng một mình, cụm này nghe khá bị động.",
+      better: "Đi kèm kế hoạch hành động và thời điểm cụ thể.",
     },
   ] as const;
 
   const unhappyCustomerRules = [
     {
       phrase: "calm down",
-      why: "This can sound dismissive when the customer is upset.",
+      why: "Khi khách đang bực, câu này dễ tạo cảm giác bị gạt đi.",
       better:
-        "Acknowledge the frustration instead, e.g. 'I understand why this is frustrating.'",
+        "Nên thừa nhận cảm xúc trước, ví dụ: 'I understand why this is frustrating.'",
     },
     {
       phrase: "you misunderstood",
-      why: "This can sound defensive and escalate tension.",
-      better: "Clarify the issue calmly without blaming the customer.",
+      why: "Câu này dễ tạo cảm giác đổ lỗi và làm căng thẳng tăng lên.",
+      better: "Nói lại vấn đề thật bình tĩnh, tránh quy lỗi cho khách.",
     },
     {
       phrase: "it's not our fault",
-      why: "This can increase conflict and reduce trust.",
-      better: "Focus on what you can do next to resolve the issue.",
+      why: "Câu này dễ đẩy xung đột lên cao và làm giảm niềm tin.",
+      better: "Tập trung vào việc bạn sẽ làm gì tiếp theo để xử lý.",
     },
     {
       phrase: "please be patient",
-      why: "This can feel passive if you do not give a clear action or timeline.",
-      better: "Pair it with a specific action and timing.",
+      why: "Nếu không có hành động cụ thể đi kèm, câu này nghe khá thụ động.",
+      better: "Đi kèm với một hành động rõ và mốc thời gian cụ thể.",
     },
   ] as const;
 
@@ -459,13 +503,13 @@ function FeedbackContent() {
     isScenarioMode && scenarioMeta
       ? scenarioMeta.intro
       : (ACTIVITY_FEEDBACK[activity ?? "Inner Work"] ??
-        "You showed up with intention today. Keep this momentum going.");
+        "Bạn đã xuất hiện và luyện nghiêm túc hôm nay. Giữ nhịp này nhé.");
 
   const supportMessage =
     isScenarioMode && scenarioMeta
       ? scenarioMeta.support
       : (ACTIVITY_SUPPORT[activity ?? "Inner Work"] ??
-        "Keep moving with steady intention, one meaningful step at a time.");
+        "Cứ đi đều từng bước nhỏ, mỗi bước đều có ý nghĩa.");
 
   const activityIcon = isScenarioMode
     ? "🧭"
@@ -474,6 +518,7 @@ function FeedbackContent() {
   const activityAccent = isScenarioMode
     ? "text-amber-200"
     : (ACTIVITY_ACCENT[activity ?? "Inner Work"] ?? "text-neutral-300");
+  const activityLabelVi = ACTIVITY_LABEL_VI[activity ?? "Inner Work"] ?? "Hiểu mình";
 
   const answerAwareLines = getAnswerAwareFeedback(answer);
   const practicalNextLine = getPracticalNextLine(answer);
@@ -485,9 +530,9 @@ function FeedbackContent() {
   const structureTotalCount = structureChecklist.length;
   const structureSummaryLine =
     structureTotalCount > 0 && structureDoneCount === structureTotalCount
-      ? "Your reply already includes the key parts."
+      ? "Câu trả lời của bạn đã có đủ các phần chính."
       : structureTotalCount > 0
-        ? `${structureDoneCount} of ${structureTotalCount} parts are already strong.`
+        ? `${structureDoneCount}/${structureTotalCount} phần đã ổn.`
         : "";
   const riskyPhrases = getRiskyPhrases(answer, scenario?.id);
   const whyThisWorks = getWhyThisWorks(scenario?.id);
@@ -504,6 +549,7 @@ function FeedbackContent() {
   const [showRepeatPrompt, setShowRepeatPrompt] = useState(false);
   const [showCloserMessage, setShowCloserMessage] = useState(false);
   const [showStructureDetails, setShowStructureDetails] = useState(false);
+  const [showRiskyPhraseDetails, setShowRiskyPhraseDetails] = useState(false);
   const [showWhyThisWorks, setShowWhyThisWorks] = useState(false);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
   const yourRecordingRef = useRef<HTMLDivElement | null>(null);
@@ -563,17 +609,20 @@ function FeedbackContent() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-10">
-      <section className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-6">
+    <main className="relative min-h-screen overflow-hidden bg-[#070b1d] px-4 py-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.18),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.08),transparent_2%),radial-gradient(circle_at_75%_25%,rgba(255,255,255,0.06),transparent_2%),radial-gradient(circle_at_55%_70%,rgba(255,255,255,0.05),transparent_2%)]" />
+      <section className="relative mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] p-6 backdrop-blur-md shadow-[0_12px_36px_rgba(4,10,30,0.35)]">
         <p className={`text-xs ${activityAccent}`}>
-          Completed: {activityIcon}{" "}
+          Hoàn thành: {activityIcon}{" "}
           {isScenarioMode && scenario
             ? scenario.shortLabel
-            : (activity ?? "Inner Work")}
+            : activityLabelVi}
         </p>
 
-        <h1 className="text-lg text-neutral-100">Feedback</h1>
-        <p className="text-sm font-medium text-neutral-100">Growth +1</p>
+        <h1 className="text-lg text-neutral-100">Phản hồi</h1>
+        <p className="text-sm text-neutral-300">Bạn đã làm tốt hơn so với lần trước</p>
+        <p className="text-sm font-medium text-neutral-100">+1 Tiến bộ</p>
 
         {!isQuickMode ? (
           <p className="text-sm text-neutral-300">{feedbackMessage}</p>
@@ -596,9 +645,9 @@ function FeedbackContent() {
         {!isScenarioMode && voiceRecordingUrl ? (
           <div
             ref={yourRecordingRef}
-            className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3"
+            className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md"
           >
-            <p className="text-xs text-neutral-400">Your recording</p>
+            <p className="text-xs text-neutral-400">Bản thu của bạn</p>
             <audio
               ref={voiceAudioRef}
               src={voiceRecordingUrl}
@@ -608,31 +657,31 @@ function FeedbackContent() {
             <button
               type="button"
               onClick={() => void voiceAudioRef.current?.play()}
-              className="mt-2 rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+              className="mt-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
             >
-              ▶️ Play
+              ▶️ Nghe
             </button>
             <p className="mt-2 text-xs text-neutral-400">
-              Which one sounds more confident — yours or this version?
+              Bản nào nghe tự tin hơn — của bạn hay bản gợi ý?
             </p>
             <p className="text-xs text-neutral-400">
-              Now try saying this version out loud.
+              Giờ thử nói lại theo bản gợi ý này.
             </p>
           </div>
         ) : null}
 
         {isQuickMode && quickScenario ? (
-          <div className="flex flex-col gap-3 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
             <p className="text-sm text-neutral-300">
-              <span className="text-neutral-100">Primary fix:</span>{" "}
+              <span className="text-neutral-100">Điểm cần sửa chính:</span>{" "}
               {quickScenario.primaryFix}
             </p>
             {voiceRecordingUrl ? (
               <div
                 ref={yourRecordingRef}
-                className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3"
+                className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md"
               >
-                <p className="text-xs text-neutral-400">Your recording</p>
+                <p className="text-xs text-neutral-400">Bản thu của bạn</p>
                 <audio
                   ref={voiceAudioRef}
                   src={voiceRecordingUrl}
@@ -642,21 +691,21 @@ function FeedbackContent() {
                 <button
                   type="button"
                   onClick={() => void voiceAudioRef.current?.play()}
-                  className="mt-2 rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  className="mt-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                 >
-                  ▶️ Play
+                  ▶️ Nghe
                 </button>
               </div>
             ) : null}
             <div className="w-full">
               <p className="text-sm text-neutral-300">
-                <span className="text-neutral-100">Better version:</span>{" "}
+                <span className="text-neutral-100">Bản gợi ý:</span>{" "}
                 {quickScenario.betterVersion}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                   onClick={() => {
                     speakText(quickScenario.betterVersion, 0.95, () => {
                       yourRecordingRef.current?.scrollIntoView({
@@ -668,43 +717,43 @@ function FeedbackContent() {
                     });
                   }}
                 >
-                  🎙️ Say this version
+                  🎙️ Nói theo bản gợi ý
                 </button>
               </div>
               {showRepeatPrompt ? (
                 <div className="mt-2 text-sm text-yellow-200">
-                  Now record your new version.
+                  Giờ thu lại phiên bản mới của bạn.
                 </div>
               ) : null}
               {showCloserMessage ? (
-                <p className="mt-1 text-sm text-emerald-200">That was closer.</p>
+                <p className="mt-1 text-sm text-emerald-200">Đã gần đúng hơn rồi.</p>
               ) : null}
             </div>
           </div>
         ) : null}
 
         {!isQuickMode && isScenarioMode ? (
-          <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+          <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
             <p className="text-sm text-neutral-300">
-              <span className="text-neutral-100">Primary fix:</span>{" "}
+              <span className="text-neutral-100">Điểm cần sửa chính:</span>{" "}
               {whatToChange}
             </p>
 
             {structureChecklist.length > 0 ? (
-              <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+              <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
                 <p className="text-sm text-neutral-100">
-                  What a strong reply needs
+                  Một câu trả lời mạnh cần
                 </p>
-                <p className="text-xs text-neutral-400">Start with one:</p>
+                <p className="text-xs text-neutral-400">Bắt đầu từ một điểm:</p>
                 <p className="text-xs text-neutral-400">
                   {getStructureStarter(scenario?.id)}
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowStructureDetails((prev) => !prev)}
-                  className="w-fit rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  className="w-fit rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                 >
-                  {showStructureDetails ? "Hide details" : "Show details"}
+                  {showStructureDetails ? "Ẩn chi tiết" : "Xem chi tiết"}
                 </button>
                 {showStructureDetails ? (
                   <>
@@ -731,7 +780,7 @@ function FeedbackContent() {
                       ))}
                     </div>
                     <p className="text-xs text-neutral-400">
-                      Use the missing parts to improve your next draft.
+                      Dựa vào các phần còn thiếu để sửa bản trả lời tiếp theo.
                     </p>
                   </>
                 ) : null}
@@ -739,32 +788,43 @@ function FeedbackContent() {
             ) : null}
 
             {isScenarioMode && riskyPhrases.length > 0 ? (
-              <div className="flex flex-col gap-2 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-                <p className="text-sm text-neutral-100">Risky phrase detected</p>
-
-                {riskyPhrases.map((item) => (
-                  <div key={item.phrase} className="flex flex-col gap-1">
-                    <p className="text-sm text-neutral-300">
-                      <span className="text-neutral-100">
-                        &quot;{item.phrase}&quot;
-                      </span>{" "}
-                      — {item.why}
-                    </p>
-                    <p className="text-sm text-neutral-300">
-                      <span className="text-neutral-100">Better:</span>{" "}
-                      {item.better}
-                    </p>
-                  </div>
-                ))}
+              <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
+                <p className="text-sm text-neutral-100">Phát hiện cụm từ rủi ro</p>
+                <p className="text-xs text-neutral-400">
+                  Có {riskyPhrases.length} cụm nên chỉnh để câu trả lời chắc hơn.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowRiskyPhraseDetails((prev) => !prev)}
+                  className="w-fit rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
+                >
+                  {showRiskyPhraseDetails ? "Ẩn chi tiết" : "Xem chi tiết"}
+                </button>
+                {showRiskyPhraseDetails
+                  ? riskyPhrases.map((item) => (
+                      <div key={item.phrase} className="flex flex-col gap-1">
+                        <p className="text-sm text-neutral-300">
+                          <span className="text-neutral-100">
+                            &quot;{item.phrase}&quot;
+                          </span>{" "}
+                          — {item.why}
+                        </p>
+                        <p className="text-sm text-neutral-300">
+                          <span className="text-neutral-100">Gợi ý tốt hơn:</span>{" "}
+                          {item.better}
+                        </p>
+                      </div>
+                    ))
+                  : null}
               </div>
             ) : null}
 
             {voiceRecordingUrl ? (
               <div
                 ref={yourRecordingRef}
-                className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3"
+                className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md"
               >
-                <p className="text-xs text-neutral-400">Your recording</p>
+                <p className="text-xs text-neutral-400">Bản thu của bạn</p>
                 <audio
                   ref={voiceAudioRef}
                   src={voiceRecordingUrl}
@@ -774,22 +834,22 @@ function FeedbackContent() {
                 <button
                   type="button"
                   onClick={() => void voiceAudioRef.current?.play()}
-                  className="mt-2 rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  className="mt-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                 >
-                  ▶️ Play
+                  ▶️ Nghe
                 </button>
                 <p className="mt-2 text-xs text-neutral-400">
-                  Which one sounds more confident — yours or this version?
+                  Bản nào nghe tự tin hơn — của bạn hay bản gợi ý?
                 </p>
                 <p className="text-xs text-neutral-400">
-                  Now try saying this version out loud.
+                  Giờ thử nói lại theo bản gợi ý này.
                 </p>
               </div>
             ) : null}
 
             <div className="w-full">
               <p className="text-sm text-neutral-300">
-                <span className="text-neutral-100">Better version:</span>
+                <span className="text-neutral-100">Bản gợi ý:</span>
               </p>
               <p className="mt-1 whitespace-pre-line break-words text-sm leading-relaxed text-neutral-300">
                 {betterVersion}
@@ -798,13 +858,13 @@ function FeedbackContent() {
                 <button
                   type="button"
                   onClick={() => speakText(betterVersion, 0.8)}
-                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                 >
-                  🐢 Slow listen
+                  🐢 Nghe chậm
                 </button>
                 <button
                   type="button"
-                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                   onClick={() => {
                     speakText(betterVersion, 0.95, () => {
                       yourRecordingRef.current?.scrollIntoView({
@@ -816,37 +876,37 @@ function FeedbackContent() {
                     });
                   }}
                 >
-                  🎙️ Say this version
+                  🎙️ Nói theo bản gợi ý
                 </button>
                 <button
                   type="button"
                   onClick={() => void copyText(betterVersion)}
-                  className="rounded-md border border-neutral-700 bg-neutral-900/50 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800/70"
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/90 backdrop-blur-sm transition hover:bg-white/10"
                 >
-                  Copy and send
+                  Sao chép để dùng ngay
                 </button>
               </div>
               <p className="mt-1 text-xs text-neutral-400">
-                Say it now — don’t think, just speak.
+                Nói luôn — đừng nghĩ nhiều, cứ nói.
               </p>
               {showRepeatPrompt ? (
                 <div className="mt-2 text-sm text-yellow-200">
-                  Now record your new version.
+                  Giờ thu lại phiên bản mới của bạn.
                 </div>
               ) : null}
               {showCloserMessage ? (
-                <p className="mt-1 text-sm text-emerald-200">That was closer.</p>
+                <p className="mt-1 text-sm text-emerald-200">Đã gần đúng hơn rồi.</p>
               ) : null}
             </div>
 
             {isScenarioMode && whyThisWorks ? (
-              <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
+              <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => setShowWhyThisWorks((prev) => !prev)}
                   className="text-xs text-neutral-400 hover:text-neutral-300"
                 >
-                  Why this works
+                  Vì sao cách này hiệu quả
                 </button>
                 {showWhyThisWorks ? (
                   <p className="mt-1 text-sm text-neutral-300">{whyThisWorks}</p>
@@ -858,31 +918,31 @@ function FeedbackContent() {
 
         {!isQuickMode ? <p className="text-sm text-neutral-300">{supportMessage}</p> : null}
         {!isQuickMode && nextScenario ? (
-          <div className="rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3">
-            <p className="text-xs text-neutral-400">Next challenge</p>
+          <div className="rounded-2xl border border-white/10 bg-[rgba(20,30,70,0.45)] px-4 py-3 backdrop-blur-md">
+            <p className="text-xs text-neutral-400">Thử thách tiếp theo</p>
             <p className="mt-1 text-sm text-neutral-200">🧭 {nextScenario.title}</p>
             <p className="mt-1 text-xs text-neutral-400">{nextScenarioGoal}</p>
           </div>
         ) : null}
         {!isQuickMode ? (
           <p className="text-xs text-neutral-400">
-            Keep going — one more challenge will make this easier.
+            Đi tiếp nhé — thêm một vòng nữa sẽ thấy dễ hơn.
           </p>
         ) : null}
 
         <button
           type="button"
           onClick={handleNextChallenge}
-          className="w-fit rounded-lg border border-neutral-700 bg-neutral-900/60 px-4 py-2 text-sm text-neutral-100 hover:bg-neutral-800/70"
+          className="w-fit rounded-xl bg-[#F4C542] px-4 py-2 text-sm font-semibold text-[#1B1B1B] shadow-[0_0_20px_rgba(244,197,66,0.18)] transition hover:bg-[#FFD45A]"
         >
-          Continue to next challenge
+          Tiếp tục thử thách tiếp theo
         </button>
         <button
           type="button"
           onClick={handleBackToTree}
-          className="w-fit text-xs text-neutral-400 underline-offset-2 hover:text-neutral-300 hover:underline"
+          className="w-fit rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/85 backdrop-blur-sm transition hover:bg-white/10 hover:text-white"
         >
-          Go back to your tree
+          Về lại cây của bạn
         </button>
       </section>
     </main>
